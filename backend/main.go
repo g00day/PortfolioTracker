@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 
-	"portfolio-tracker/datafetcher"
+	edf "portfolio-tracker/internal/adapter/exchanges_datafetcher"
 )
 
 func main() {
-	fetcher := datafetcher.NewCrossMarketDataFetcher(nil, 2000)
+	fetcher := edf.NewCrossMarketDataFetcher(nil, 1000)
 
 	klines := fetcher.GetKlines("BTCUSDT", "D", "spot")
 

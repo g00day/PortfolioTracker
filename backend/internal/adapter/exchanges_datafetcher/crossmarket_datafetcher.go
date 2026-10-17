@@ -1,15 +1,12 @@
-package datafetcher
+package exchanges_datafetcher
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/imroc/req/v3"
 )
 
 var DefaultHeaders = map[string]string{
@@ -32,8 +29,8 @@ var APIDomainsList = []string{
 	"https://api.manepa.jp",         // Dedicated mirror-domain for Japan
 
 	// --- Testnet & Demo ---
-	"https://api-testnet.bybit.com", // Official public testnet endpoint
-	"https://api-demo.bybit.com",    // General demotrading endpoint
+	"https://api.bybit.com", // Official public testnet endpoint
+	"https://api.bybit.com", // General demotrading endpoint
 }
 
 type ConnectionSettings struct {
@@ -47,7 +44,7 @@ NewConnectionSettings contains a required settings to proceed almost all tools
 That class is being used almost everywhere.
 If it is not set then the default settings will be applied
 -----------------------------------------------------------
-base_url="https://bytick.com" # Official fault tolerant mirror-domain
+base_url="https://bybit.com" # Main domain - Singapore(AWS)
 DEFAULT_HEADERS = { # default headers that help to avoid cloudflare&AWS cdn blocks
 
 	    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -56,7 +53,7 @@ DEFAULT_HEADERS = { # default headers that help to avoid cloudflare&AWS cdn bloc
 */
 func NewConnectionSettings() ConnectionSettings {
 	return ConnectionSettings{
-		BaseURL: APIDomainsList[1], // Official fault tolerant mirror-domain
+		BaseURL: APIDomainsList[0], // Using main ://bybit.com
 		Headers: DefaultHeaders,
 	}
 }
@@ -72,7 +69,7 @@ Attributes:
 type CrossMarketDataFetcher struct {
 	ConnectionSettings ConnectionSettings
 	KlinesLimit        int
-	HTTPClient         *http.Client
+	HTTPClient         *req.Client
 }
 
 /*
@@ -93,10 +90,15 @@ func NewCrossMarketDataFetcher(settings *ConnectionSettings, klinesLimit int) *C
 		klinesLimit = 1000
 	}
 
+	// Native Chrome spoofing setup
+	client := req.C().
+		ImpersonateChrome().
+		SetTimeout(10 * time.Second)
+
 	return &CrossMarketDataFetcher{
 		ConnectionSettings: s,
 		KlinesLimit:        klinesLimit,
-		HTTPClient:         &http.Client{Timeout: 10 * time.Second},
+		HTTPClient:         client,
 	}
 }
 
@@ -140,59 +142,31 @@ func (f *CrossMarketDataFetcher) GetKlines(symbol, period, marketType string) []
 	baseURL := strings.TrimRight(f.ConnectionSettings.BaseURL, "/")
 	fullURL := baseURL + endpoint
 
-	u, err := url.Parse(fullURL)
-	if err != nil {
-		fmt.Printf("Error parsing URL: %v\n", err)
-		return [][]string{}
-	}
+	var apiResp BybitResponse
 
-	q := u.Query()
-	q.Set("category", marketType)
-	q.Set("symbol", symbol)
-	q.Set("interval", period)
-	q.Set("limit", strconv.Itoa(f.KlinesLimit)) // defines the total amount of klines
-	u.RawQuery = q.Encode()
+	// Safe parameter binding and explicit query execution
+	resp, err := f.HTTPClient.R().
+		SetHeaders(f.ConnectionSettings.Headers).
+		SetQueryParams(map[string]string{
+			"category": marketType,
+			"symbol":   symbol,
+			"interval": period,
+			"limit":    strconv.Itoa(f.KlinesLimit),
+		}).
+		SetSuccessResult(&apiResp).
+		Get(fullURL)
 
-	// Idiomatic Go error handling instead of try-except block
-	req, err := http.NewRequest("GET", u.String(), nil)
-	if err != nil {
-		fmt.Printf("Error fetching data for %s: %v\n", symbol, err)
-		return [][]string{}
-	}
-
-	for key, value := range f.ConnectionSettings.Headers {
-		req.Header.Set(key, value)
-	}
-
-	resp, err := f.HTTPClient.Do(req)
-	if err != nil {
-		fmt.Printf("Error fetching data for %s: %v\n", symbol, err)
-		return [][]string{}
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("Error fetching data for %s: %v\n", symbol, err)
 		return [][]string{}
 	}
 
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		preview := string(bodyBytes)
+	if !resp.IsSuccessState() {
+		preview := resp.String()
 		if len(preview) > 200 {
 			preview = preview[:200]
 		}
 		fmt.Printf("Error fetching data for %s: HTTP Status %d. Preview: %s\n", symbol, resp.StatusCode, preview)
-		return [][]string{}
-	}
-
-	var apiResp BybitResponse
-	if err := json.NewDecoder(bytes.NewReader(bodyBytes)).Decode(&apiResp); err != nil {
-		preview := string(bodyBytes)
-		if len(preview) > 200 {
-			preview = preview[:200]
-		}
-		fmt.Printf("Error fetching data for %s: %v. Raw response was: %s\n", symbol, err, preview)
 		return [][]string{}
 	}
 
