@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	edf "portfolio-tracker/internal/adapter/exchanges_datafetcher"
+
+	service "portfolio-tracker/internal/service"
 )
 
 func main() {
-	fetcher := edf.NewCrossMarketDataFetcher(nil, 1000)
+	connectionSettings := edf.NewConnectionSettings()
+	df := edf.NewCrossMarketDataFetcher(&connectionSettings, 1000)
 
-	klines := fetcher.GetKlines("BTCUSDT", "D", "spot")
+	vc := service.VolatilityCursor{Datafetcher: *df}
 
-	fmt.Printf("%d\n", len(klines))
-	for _, kline := range klines {
-		fmt.Println(kline)
-	}
+	fmt.Print(vc.PrepareParkinsonVolatilityDistributionData("BTCUSDT", "D", "spot"))
 }
