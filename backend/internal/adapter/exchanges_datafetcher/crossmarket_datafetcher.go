@@ -127,7 +127,7 @@ Returns:
 
 	[][]string: A list of klines data if the request is successful; otherwise, an empty list.
 */
-func (f *CrossMarketDataFetcher) GetKlines(symbol, period, marketType string) [][]string {
+func (df *CrossMarketDataFetcher) GetKlines(symbol, period, marketType string) [][]float64 {
 	if symbol == "" {
 		symbol = "BTCUSDT"
 	}
@@ -139,26 +139,26 @@ func (f *CrossMarketDataFetcher) GetKlines(symbol, period, marketType string) []
 	}
 
 	endpoint := "/v5/market/kline"
-	baseURL := strings.TrimRight(f.ConnectionSettings.BaseURL, "/")
+	baseURL := strings.TrimRight(df.ConnectionSettings.BaseURL, "/")
 	fullURL := baseURL + endpoint
 
 	var apiResp BybitResponse
 
 	// Safe parameter binding and explicit query execution
-	resp, err := f.HTTPClient.R().
-		SetHeaders(f.ConnectionSettings.Headers).
+	resp, err := df.HTTPClient.R().
+		SetHeaders(df.ConnectionSettings.Headers).
 		SetQueryParams(map[string]string{
 			"category": marketType,
 			"symbol":   symbol,
 			"interval": period,
-			"limit":    strconv.Itoa(f.KlinesLimit),
+			"limit":    strconv.Itoa(df.KlinesLimit),
 		}).
 		SetSuccessResult(&apiResp).
 		Get(fullURL)
 
 	if err != nil {
 		fmt.Printf("Error fetching data for %s: %v\n", symbol, err)
-		return [][]string{}
+		return [][]float64{}
 	}
 
 	if !resp.IsSuccessState() {
@@ -167,13 +167,36 @@ func (f *CrossMarketDataFetcher) GetKlines(symbol, period, marketType string) []
 			preview = preview[:200]
 		}
 		fmt.Printf("Error fetching data for %s: HTTP Status %d. Preview: %s\n", symbol, resp.StatusCode, preview)
-		return [][]string{}
+		return [][]float64{}
 	}
 
 	if apiResp.RetCode != 0 {
 		fmt.Printf("Error fetching data for %s: Bybit API Error: %s\n", symbol, apiResp.RetMsg)
-		return [][]string{}
+		return [][]float64{}
 	}
 
-	return apiResp.Result.List
+	stringSlice := apiResp.Result.List
+	floatSlice := make([][]float64, 0, len(stringSlice))
+
+	//  converting bybit response from [][]string to [][]float
+	for _, stringCandle := range stringSlice {
+		floatCandle := make([]float64, 0, len(stringCandle))
+		hasError := false
+
+		for _, itemStr := range stringCandle {
+			val, err := strconv.ParseFloat(itemStr, 64)
+			if err != nil {
+				fmt.Printf("Error parsing candle value '%s' for %s: %v\n", itemStr, symbol, err)
+				hasError = true
+				break
+			}
+			floatCandle = append(floatCandle, val)
+		}
+
+		if !hasError {
+			floatSlice = append(floatSlice, floatCandle)
+		}
+	}
+
+	return floatSlice
 }
