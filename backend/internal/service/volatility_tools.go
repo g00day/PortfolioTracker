@@ -9,9 +9,33 @@ type VolatilityCursor struct {
 	Datafetcher df.CrossMarketDataFetcher
 }
 
+func (vc *VolatilityCursor) CalculateMediumParkinsonVolatility(symbol, period, marketType string) float64 {
+	df := vc.Datafetcher
+	klines := df.GetKlines(symbol, period, marketType)
+
+	partialVolatilitiesSumm := 0.0
+	validCandlesCount := 0 // count only valid candles
+
+	for _, candle := range klines {
+		high := candle[2]
+		low := candle[3]
+
+		if low <= 0 || high <= 0 {
+			continue
+		}
+
+		partialVolatility := math.Pow(math.Log(high/low), 2)
+		partialVolatilitiesSumm += partialVolatility
+		validCandlesCount++
+	}
+
+	parkinsonConstant := 4 * float64(validCandlesCount) * math.Log(2) // calculate parkinson contant for only a valid days
+
+	return math.Sqrt((1 / parkinsonConstant) * partialVolatilitiesSumm)
+}
+
 func (vc *VolatilityCursor) CalculateAnnualizedParkinsonVolatility(symbol, marketType string) float64 {
 	df := vc.Datafetcher
-
 	klines := df.GetKlines(symbol, "D", marketType) // using D timeframe to calculate volatility
 
 	partialVolatilitiesSumm := 0.0
