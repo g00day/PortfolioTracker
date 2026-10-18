@@ -110,3 +110,66 @@ func (vc *VolatilityCursor) PrepareParkinsonVolatilityDistributionData(
 
 	return distributionData, expectedValue, nil
 }
+
+func (vc *VolatilityCursor) CalculateLognormalParkinsonVaR(symbol, period, marketType string) (float64, float64, float64) {
+	df := vc.Datafetcher
+	klines := df.GetKlines(symbol, period, marketType)
+
+	totalKlines := len(klines)
+	if totalKlines == 0 {
+		return 0.0, 0.0, 0.0
+	}
+
+	volatilities := make([]float64, 0, totalKlines)
+	parkinsonConstant := 2.0 * math.Sqrt(math.Log(2.0))
+
+	// Collect logarithm's values for a lognormal distribution
+	// lognormal distribution requires ln(x) to be distributed as Normal distribution
+	var logSum float64
+	var validCount float64
+
+	for _, candle := range klines {
+		high := candle[2]
+		low := candle[3]
+
+		if low <= 0 || high <= 0 {
+			continue
+		}
+
+		vol := math.Log(high/low) / parkinsonConstant
+
+		// Volatility must be greater then zero to be able to logarithm it
+		if vol > 0 {
+			volatilities = append(volatilities, vol)
+			logSum += math.Log(vol)
+			validCount++
+		}
+	}
+
+	if validCount == 0 {
+		return 0.0, 0.0, 0.0
+	}
+
+	// 1. find Mu to calculate ln(volatility)
+	mu := logSum / validCount
+
+	// 2. find the deflection(sigma)
+	var varianceSum float64
+	for _, vol := range volatilities {
+		lnVol := math.Log(vol)
+		varianceSum += math.Pow(lnVol-mu, 2)
+	}
+	sigma := math.Sqrt(varianceSum / validCount)
+
+	// Z-score constants(Quantiles of normal distribution)
+	const z90 = 1.2815515655446004
+	const z95 = 1.6448536269514722
+	const z99 = 2.3263478740408408
+
+	// 3. Calculate lognormal quantiles: exp(mu + z * sigma)
+	q90 := math.Exp(mu + z90*sigma)
+	q95 := math.Exp(mu + z95*sigma)
+	q99 := math.Exp(mu + z99*sigma)
+
+	return q90, q95, q99
+}
