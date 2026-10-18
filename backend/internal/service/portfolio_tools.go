@@ -41,3 +41,11 @@ func (p *Portfolio) CalculateDailyLogarithmicIncome(ticker string) []float64 {
 
 	return logarithmicIncomes
 }
+
+func (p *Portfolio) CalculateDailyAssetCorrelation(ticker1, ticker2 string) float64 {
+	ticker1Income, ticker2Income := p.CalculateDailyLogarithmicIncome(ticker1), p.CalculateDailyLogarithmicIncome(ticker2)
+
+	correlation := CalculatePirsonCorrelation(ticker1Income, ticker2Income)
+
+	return correlation
+}
