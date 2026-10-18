@@ -13,6 +13,11 @@ func main() {
 
 	vc := service.VolatilityCursor{Datafetcher: *df}
 
+	assets := []service.Asset{}
+	p := service.Portfolio{Datafetcher: *df, Assets: assets}
+
+	fmt.Print(p.CalculateDailyLogarithmicIncome("BTCUSDT"))
+
 	//fmt.Print(vc.PrepareParkinsonVolatilityDistributionData("BTCUSDT", "D", "spot"))
 	//fmt.Print(vc.CalculateAnnualizedParkinsonVolatility("BTCUSDT", "spot"))
 	//fmt.Print(vc.CalculateAnnualizedVolatilityDrag("BTCUSDT", "spot"))
