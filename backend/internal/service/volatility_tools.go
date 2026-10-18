@@ -36,6 +36,13 @@ func (vc *VolatilityCursor) CalculateAnnualizedParkinsonVolatility(symbol, marke
 	return math.Sqrt((365 / parkinsonConstant) * partialVolatilitiesSumm)
 }
 
+func (vc *VolatilityCursor) CalculateAnnualizedVolatilityDrag(symbol, marketType string) float64 {
+
+	volAnnualized := vc.CalculateAnnualizedParkinsonVolatility(symbol, marketType)
+
+	return math.Pow(volAnnualized, 2) / 2.0
+}
+
 func (vc *VolatilityCursor) PrepareParkinsonVolatilityDistributionData(
 	symbol string, period string, marketType string,
 ) ([][2]float64, float64, error) {
