@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	edf "portfolio-tracker/internal/adapter/exchanges_datafetcher"
 
 	service "portfolio-tracker/internal/service"
@@ -15,4 +16,6 @@ func main() {
 	//fmt.Print(vc.PrepareParkinsonVolatilityDistributionData("BTCUSDT", "D", "spot"))
 	//fmt.Print(vc.CalculateAnnualizedParkinsonVolatility("BTCUSDT", "spot"))
 	//fmt.Print(vc.CalculateAnnualizedVolatilityDrag("BTCUSDT", "spot"))
+
+	fmt.Print(vc.CalculateMediumParkinsonVolatility("BTCUSDT", "D", "spot"))
 }
