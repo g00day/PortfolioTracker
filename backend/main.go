@@ -19,7 +19,7 @@ func main() {
 	}
 	p := service.Portfolio{Datafetcher: *df, Assets: assets}
 
-	fmt.Print(p.BuildPirsonCorrelationMatrix())
+	fmt.Print(p.BuildCovariationMatrix())
 
 	//fmt.Print(p.CalculateDailyLogarithmicIncome("BTCUSDT"))
 

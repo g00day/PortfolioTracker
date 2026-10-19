@@ -25,7 +25,22 @@ func CalculateFloat64Deflection(data []float64, mean float64) float64 {
 
 }
 
-func CalculatePirsonCorrelation(data1 []float64, data2 []float64) float64 {
+func CalculateCovariation(data1, data2 []float64) float64 {
+
+	covariation := 0.0
+
+	data1Mean := CalculateFloat64Mean(data1)
+	data2Mean := CalculateFloat64Mean(data2)
+
+	for i := 0; i < len(data1); i++ {
+		covariation += (data1[i] - data1Mean) * (data2[i] - data2Mean)
+	}
+
+	return covariation
+
+}
+
+func CalculatePirsonCorrelation(data1, data2 []float64) float64 {
 
 	covariation := 0.0
 
