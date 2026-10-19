@@ -6,19 +6,13 @@ import (
 )
 
 type Asset struct {
-	Ticker     string
-	W          float64 // the weight of the asset inside the portfolio
-	Volatility float64 // volatility(whatever is needed: minutely, monthly, annualy)
+	Ticker string
+	W      float64 // the weight of the asset inside the portfolio
 }
 
 type Portfolio struct {
 	Assets      []Asset
 	Datafetcher df.CrossMarketDataFetcher
-}
-
-type screenedAsset struct {
-	Ticker     string
-	MeanIncome float64
 }
 
 func (p *Portfolio) CalculateDailyLogarithmicIncome(ticker string) []float64 {
@@ -48,4 +42,37 @@ func (p *Portfolio) CalculateDailyAssetCorrelation(ticker1, ticker2 string) floa
 	correlation := CalculatePirsonCorrelation(ticker1Income, ticker2Income)
 
 	return correlation
+}
+
+func (p *Portfolio) BuildPirsonCorrelationMatrix() [][]float64 {
+	assets := p.Assets
+	n := len(assets)
+
+	// allocate memory for matrix
+	correlationMatrix := make([][]float64, n)
+	for i := range correlationMatrix {
+		correlationMatrix[i] = make([]float64, n)
+	}
+
+	// Cache logarithmic incomes so we don't recalculate them
+	logIncomes := make([][]float64, n)
+	for i, asset := range assets {
+		logIncomes[i] = p.CalculateDailyLogarithmicIncome(asset.Ticker)
+	}
+
+	for i := 0; i < n; i++ {
+		// Does not spend time to calculate logarithmic incomes, pirson correlation etc
+		// if it is the same asset
+		correlationMatrix[i][i] = 1.0
+
+		for j := i + 1; j < n; j++ {
+			corr := CalculatePirsonCorrelation(logIncomes[i], logIncomes[j])
+
+			// Matrix is symmetric, so fill it mirrorwise
+			correlationMatrix[i][j] = corr
+			correlationMatrix[j][i] = corr
+		}
+	}
+
+	return correlationMatrix
 }
