@@ -63,14 +63,14 @@ func (p *Portfolio) BuildCovariationMatrix() [][]float64 {
 	for i := 0; i < n; i++ {
 		// Does not spend time to calculate logarithmic incomes, covariation etc
 		// if it is the same asset
-		covariationMatrix[i][i] = 1.0
+		covariationMatrix[i][i] = CalculateVariance(logIncomes[i])
 
 		for j := i + 1; j < n; j++ {
-			corr := CalculateCovariation(logIncomes[i], logIncomes[j])
+			cov := CalculateCovariation(logIncomes[i], logIncomes[j])
 
 			// Matrix is symmetric, so fill it mirrorwise
-			covariationMatrix[i][j] = corr
-			covariationMatrix[j][i] = corr
+			covariationMatrix[i][j] = cov
+			covariationMatrix[j][i] = cov
 		}
 	}
 
@@ -108,4 +108,9 @@ func (p *Portfolio) BuildPirsonCorrelationMatrix() [][]float64 {
 	}
 
 	return correlationMatrix
+}
+
+func (p *Portfolio) CalculateGeneralVolatility() float64 {
+	volatility := 0.0
+
 }
