@@ -1,0 +1,133 @@
+.leftbar {
+  width: 243px;
+  min-height: 100vh;
+  padding: 12px 17px;
+  display: flex;
+  flex-direction: column;
+  background: #0d1728;
+}
+
+.icon {
+  width: 35px;
+  height: 35px;
+  border-radius: 10px;
+  background: #00a878;
+  color: #06161d;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 35px;
+  text-align: center;
+}
+
+.name {
+  margin: 9px 19px 64px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.portfolio-button,
+.create-button {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 13px 19px;
+  background: #006f4d;
+  color: #d9e6e3;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.portfolio-button {
+  flex: 1;
+  text-align: left;
+}
+
+.portfolio-selector {
+  display: flex;
+  align-items: stretch;
+}
+
+.portfolio-selector .portfolio-button {
+  border-radius: 8px 0 0 8px;
+}
+
+.portfolio-toggle {
+  width: 42px;
+  border: 0;
+  border-radius: 0 8px 8px 0;
+  background: #006f4d;
+  color: #d9e6e3;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.portfolio-toggle span {
+  display: inline-block;
+  transition: transform 0.2s ease;
+  transform: rotate(180deg);
+}
+
+.portfolio-toggle span.rotated {
+  transform: rotate(0);
+}
+
+.portfolio-toggle img {
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin: auto;
+}
+
+.portfolio-button span {
+  transition: transform 0.2s ease;
+}
+
+.portfolio-button span.rotated {
+  transform: rotate(180deg);
+}
+
+.portfolio-menu {
+  margin-top: 8px;
+  padding: 7px 8px;
+  border-radius: 2px;
+  background: #1d2d49;
+}
+
+.portfolio-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid #15243b;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.portfolio-menu-item:last-child {
+  border-bottom: 0;
+}
+
+.bottom { margin-top: auto; }
+.create-button { margin-bottom: 30px; }
+
+.user {
+  margin: 0 9px 18px;
+  padding: 19px;
+  border-radius: 10px;
+  background: #172337;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.logout-button {
+  width: 100%;
+  border: 0;
+  border-radius: 16px;
+  padding: 14px;
+  background: #40151c;
+  color: #eee;
+}
