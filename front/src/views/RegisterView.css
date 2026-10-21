@@ -1,0 +1,94 @@
+.register-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: start center;
+  padding-top: 48px;
+  background: #1e273a;
+  color: #f7f7f8;
+}
+
+.register-content {
+  width: 455px;
+  text-align: center;
+}
+
+.register-logo {
+  width: 72px;
+  height: 72px;
+}
+
+.register-content h1 {
+  margin: 12px 0 34px;
+  font-size: 29px;
+}
+
+.register-content h2 {
+  margin: 0 0 12px;
+  font-size: 30px;
+  font-weight: 400;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px 14px;
+  border: 3px solid #079963;
+  border-radius: 12px;
+  background: #465673;
+  text-align: left;
+}
+
+.register-form label {
+  margin-bottom: 5px;
+  color: #9da8bc;
+  font-size: 17px;
+}
+
+.register-form input {
+  height: 48px;
+  margin-bottom: 14px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  outline: none;
+  background: #101c2e;
+  color: #f7f7f8;
+  font-size: 17px;
+}
+
+.register-form input:focus {
+  outline: 2px solid #079963;
+}
+
+.register-button {
+  align-self: center;
+  min-width: 210px;
+  height: 54px;
+  margin-top: 5px;
+  border: 0;
+  border-radius: 2px;
+  background: #079963;
+  color: #fff;
+  font-size: 19px;
+  cursor: pointer;
+}
+
+.register-link {
+  align-self: center;
+  margin-top: 8px;
+  color: #f7f7f8;
+  font-size: 14px;
+  line-height: 1.8;
+  text-decoration: none;
+}
+
+.register-link:hover {
+  text-decoration: underline;
+}
+
+.register-error {
+  margin: 0 0 8px;
+  color: #ff2b2b;
+  font-size: 14px;
+  text-align: center;
+}

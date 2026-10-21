@@ -1,14 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import ResetPasswordView from '../views/ResetPasswordView.vue'
 import CreatePortfolioView from '../views/CreatePortfolioView.vue'
 import EmptyPortfolioView from '../views/EmptyPortfolioView.vue'
 import PortfolioView from '../views/PortfolioView.vue'
+import StructureView from '../views/StructureView.vue'
 
 const routes = [
   { path: '/login', component: LoginView },
+  { path: '/register', component: RegisterView },
+  { path: '/reset-password', component: ResetPasswordView },
   { path: '/create-portfolio', component: CreatePortfolioView, meta: { requiresAuth: true } },
   { path: '/empty', component: EmptyPortfolioView, meta: { requiresAuth: true } },
+  { path: '/portfolio/:id/structure', component: StructureView, meta: { requiresAuth: true } },
   { path: '/portfolio/:id', component: PortfolioView, meta: { requiresAuth: true } },
   { path: '/', component: PortfolioView },
   { path: '/:pathMatch(.*)*', redirect: '/' },
@@ -29,16 +35,15 @@ router.beforeEach((to) => {
 
   if (to.path === '/') {
     if (!portfolios.length) return '/empty'
-    return `/portfolio/${portfolios[0]}`
+    return '/portfolio/' + portfolios[0]
   }
 
   if (to.name === undefined && to.path.startsWith('/portfolio/')) {
     const portfolioId = to.params.id
     if (!portfolios.includes(portfolioId)) {
-      return portfolios.length ? `/portfolio/${portfolios[0]}` : '/empty'
+      return portfolios.length ? '/portfolio/' + portfolios[0] : '/empty'
     }
   }
 })
 
 export default router
-

@@ -32,8 +32,8 @@ body { margin: 0; }
 h1 { margin: 0 0 64px; font-size: 34px; }
 .tabs { display: flex; gap: 13px; margin: 0 0 30px 9px; }
 .tabs button,
-.periods button { border: 0; border-radius: 4px; padding: 11px 66px; background: #00764f; color: #d3dedb; font-size: 21px; font-weight: 700; }
-.tabs .active { background: #079963; color: #fff; }
+.periods button { border: 0; border-radius: 4px; padding: 11px 66px; background: #079963; color: #d3dedb; font-size: 21px; font-weight: 700; }
+.tabs .active { background: #00764f; color: #fff; }
 .chart-row { display: flex; align-items: center; gap: 45px; }
 .chart-panel { position: relative; flex: 1; max-width: 955px; height: 480px; overflow: hidden; border: 4px solid #079963; border-radius: 4px; background: #c6c1cb; }
 .chart-line { position: absolute; width: 125%; height: 4px; transform-origin: left center; }
@@ -105,4 +105,10 @@ h1 {
   .metric-card {
     height: 220px;
   }
+}
+
+.tabs button {
+  width: 208px;
+  height: 47px;
+  padding: 0;
 }

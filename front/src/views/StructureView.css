@@ -1,0 +1,196 @@
+.structure-content {
+  padding: 45px 4% 24px;
+}
+
+.structure-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 35px;
+}
+
+.structure-header h1 {
+  margin-bottom: 30px;
+}
+
+.structure-tabs {
+  margin-left: 9px;
+}
+
+.structure-tabs button {
+  min-width: 145px;
+  padding: 10px 34px;
+}
+
+.add-asset-button {
+  margin-top: 20px;
+  border: 0;
+  border-radius: 4px;
+  padding: 11px 18px;
+  background: #079963;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.asset-table {
+  width: min(100%, 865px);
+  margin-top: 14px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #0d1728;
+  color: #f7f7f8;
+}
+
+.asset-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.35fr 1fr 1.35fr 1.35fr 1.1fr;
+  min-height: 74px;
+  align-items: center;
+}
+
+.asset-row > span {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 25px;
+  border-right: 2px solid #1e2a40;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.asset-row > span:last-child {
+  border-right: 0;
+}
+
+.asset-header {
+  min-height: 66px;
+}
+
+.asset-header > span {
+  border-bottom: 2px solid #1e2a40;
+}
+
+.asset-header span {
+  justify-content: center;
+  text-align: center;
+}
+
+.asset-pnl {
+  color: #45d154;
+}
+
+.symbol-cell {
+  gap: 7px;
+}
+
+.risk-free-icon {
+  width: 34px;
+  height: auto;
+  max-height: 18px;
+  object-fit: contain;
+}
+
+.asset-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 18%);
+}
+
+.asset-modal {
+  width: 398px;
+  padding: 0 41px 13px;
+  border: 3px solid #079963;
+  border-radius: 4px;
+  background: #465673;
+  box-shadow: 0 14px 35px rgb(0 0 0 / 20%);
+}
+
+.asset-type-switch {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: -3px 0 17px;
+}
+
+.asset-type-switch button {
+  min-width: 116px;
+  border: 0;
+  border-radius: 0 0 3px 3px;
+  padding: 6px 10px;
+  background: #006f4d;
+  color: #d9e6e3;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.asset-type-switch button.selected {
+  background: #079963;
+  color: #fff;
+}
+
+.asset-modal label {
+  display: block;
+  margin-bottom: 5px;
+  color: #a8b2c5;
+  font-size: 17px;
+}
+
+.asset-modal input,
+.asset-modal select {
+  width: 100%;
+  height: 37px;
+  margin-bottom: 25px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  outline: none;
+  background: #101c2e;
+  color: #f7f7f8;
+  font-size: 16px;
+}
+
+.asset-modal input:focus,
+.asset-modal select:focus {
+  outline: 2px solid #079963;
+}
+
+.asset-submit-button {
+  display: block;
+  width: 181px;
+  height: 47px;
+  margin: -3px auto 0;
+  border: 0;
+  border-radius: 3px;
+  background: #079963;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .structure-content {
+    padding-right: 3%;
+    padding-left: 3%;
+  }
+
+  .asset-table {
+    overflow-x: auto;
+  }
+
+  .asset-row {
+    min-width: 850px;
+  }
+}
+
+.structure-tabs button {
+  width: 208px;
+  height: 47px;
+  min-width: 0;
+  padding: 0;
+}

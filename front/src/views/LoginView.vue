@@ -20,17 +20,14 @@ function submitLogin() {
       <img class="login-logo" :src="logoUrl" alt="Portfolio Tracker">
       <h1>Portfolio Tracker</h1>
       <h2>Авторизация</h2>
-
       <form class="login-form" @submit.prevent="submitLogin">
         <label for="login">Логин</label>
         <input id="login" v-model="login" type="text" placeholder="Введите логин" required>
-
         <label for="password">Пароль</label>
         <input id="password" v-model="password" type="password" placeholder="Введите пароль" required>
-
         <button class="login-button" type="submit">Войти</button>
-        <button class="login-link" type="button">Забыли пароль?</button>
-        <button class="login-link" type="button">Нет аккаунта?</button>
+        <RouterLink class="login-link" to="/reset-password">Забыли пароль?</RouterLink>
+        <RouterLink class="login-link" to="/register">Нет аккаунта?</RouterLink>
       </form>
     </section>
   </main>
