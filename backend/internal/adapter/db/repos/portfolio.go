@@ -82,3 +82,33 @@ func (p *Portfolio) Read(id int32) (PortfolioInstance, error) {
 
 	return data, nil
 }
+
+func (p *Portfolio) EditName(id int32, newName string) error {
+	query := `UPDATE portfolios SET name = $1 WHERE id = $2;`
+
+	res, err := p.DBConn.Exec(context.Background(), query, newName, id)
+	if err != nil {
+		return fmt.Errorf("failed to update portfolio name: %w", err)
+	}
+
+	if res.RowsAffected() == 0 {
+		return fmt.Errorf("portfolio not found")
+	}
+
+	return nil
+}
+
+func (p *Portfolio) Delete(id int32) error {
+	query := `DELETE FROM portfolios WHERE id = $1;`
+
+	res, err := p.DBConn.Exec(context.Background(), query, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete portfolio: %w", err)
+	}
+
+	if res.RowsAffected() == 0 {
+		return fmt.Errorf("portfolio not found")
+	}
+
+	return nil
+}
