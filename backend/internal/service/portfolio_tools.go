@@ -111,6 +111,29 @@ func (p *Portfolio) BuildPirsonCorrelationMatrix() [][]float64 {
 }
 
 func (p *Portfolio) CalculateGeneralVolatility() float64 {
-	volatility := 0.0
+	covariationMatrix := p.BuildCovariationMatrix() // Σ-matrix
+	assets := p.Assets
+	n := len(assets)
 
+	// if the portfolio is empty then return zero
+	if n == 0 {
+		return 0.0
+	}
+
+	variance := 0.0
+
+	// w^T * Sigma * w
+	for i := 0; i < n; i++ {
+		w_i := assets[i].W
+
+		for j := 0; j < n; j++ {
+			w_j := assets[j].W
+			sigma_ij := covariationMatrix[i][j]
+
+			variance += w_i * w_j * sigma_ij
+		}
+	}
+
+	// volatility is the square root of variance
+	return math.Sqrt(variance)
 }
