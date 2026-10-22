@@ -50,9 +50,7 @@ func (mms *MacroMarketSnapshot) Create(data MacroMarketSnapshotInstance) (int32,
 		$2,
 		$3,
 		$4
-	)
-		RETURNING id;
-	)`
+	) RETURNING id;`
 	var id int32
 
 	err := mms.DBConn.QueryRow(context.Background(), query,

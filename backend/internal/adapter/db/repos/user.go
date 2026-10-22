@@ -21,7 +21,7 @@ type User struct {
 }
 
 func (u *User) CreateTable() error {
-	query := `CREATE TABLE IF NOT EXISTS user (
+	query := `CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
 		username VARCHAR(40),
 		email VARCHAR(256),
@@ -38,19 +38,13 @@ func (u *User) CreateTable() error {
 }
 
 func (u *User) Create(data UserInstance) (int32, error) {
-	query := `INSERT INTO user (
+	query := `INSERT INTO users (
 		username,
 		email,
 		password_hash,
-		created_at)
-	VALUES (
-		$1,
-		$2,
-		$3,
-		$4
-	)
-		RETURNING id;
-	)`
+		created_at
+	) VALUES ($1, $2, $3, $4)
+	RETURNING id;`
 
 	var id int32
 
@@ -66,4 +60,27 @@ func (u *User) Create(data UserInstance) (int32, error) {
 	}
 
 	return id, nil
+}
+
+func (u *User) Read(id int32) (UserInstance, error) {
+	query := `SELECT id, username, email, password_hash, created_at FROM users WHERE id = $1`
+
+	var user UserInstance
+
+	err := u.DBConn.QueryRow(context.Background(), query, id).Scan(
+		&user.Id,
+		&user.Username,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return UserInstance{}, fmt.Errorf("user not found: %w", err)
+		}
+		return UserInstance{}, fmt.Errorf("failed to read user: %w", err)
+	}
+
+	return user, nil
 }
