@@ -11,7 +11,7 @@ func main() {
 	connectionSettings := edf.NewConnectionSettings()
 	df := edf.NewCrossMarketDataFetcher(&connectionSettings, 1000)
 
-	vc := service.VolatilityCursor{Datafetcher: *df}
+	//vc := service.VolatilityCursor{Datafetcher: *df}
 
 	assets := []service.Asset{
 		service.Asset{Ticker: "BTCUSDT", W: 0.5},
@@ -19,7 +19,7 @@ func main() {
 	}
 	p := service.Portfolio{Datafetcher: *df, Assets: assets}
 
-	fmt.Print(p.BuildCovariationMatrix())
+	//fmt.Print(p.BuildCovariationMatrix())
 
 	//fmt.Print(p.CalculateDailyLogarithmicIncome("BTCUSDT"))
 
@@ -27,5 +27,10 @@ func main() {
 	//fmt.Print(vc.CalculateAnnualizedParkinsonVolatility("BTCUSDT", "spot"))
 	//fmt.Print(vc.CalculateAnnualizedVolatilityDrag("BTCUSDT", "spot"))
 
-	fmt.Print(vc.CalculateMediumParkinsonVolatility("BTCUSDT", "D", "spot"))
+	//fmt.Println(vc.CalculateMediumParkinsonVolatility("BTCUSDT", "D", "spot"))
+
+	//fmt.Print(p.CalculateGeneralVolatility())
+	fmt.Println(p.CalculateMarginalAndComponentContributions())
+	fmt.Println(p.CalculateDiversificationRate())
+	fmt.Println(p.CalculateEffectiveNA())
 }

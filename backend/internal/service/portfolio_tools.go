@@ -11,8 +11,9 @@ type Asset struct {
 }
 
 type Portfolio struct {
-	Assets      []Asset
-	Datafetcher df.CrossMarketDataFetcher
+	Assets       []Asset
+	Datafetcher  df.CrossMarketDataFetcher
+	RiskFreeRate float64
 }
 
 func (p *Portfolio) CalculateDailyLogarithmicIncome(ticker string) []float64 {
@@ -136,4 +137,82 @@ func (p *Portfolio) CalculateGeneralVolatility() float64 {
 
 	// volatility is the square root of variance
 	return math.Sqrt(variance)
+}
+
+func (p *Portfolio) CalculateDiversificationRate() float64 {
+	weightedVolatilitySumm := 0.0
+
+	assets := p.Assets
+
+	if len(assets) == 0 {
+		return 0.0
+	}
+
+	covariationMatrix := p.BuildCovariationMatrix()
+	generalVolatility := p.CalculateGeneralVolatility() // portfolio variance
+
+	for i, asset := range assets {
+
+		assetVolatility := math.Sqrt(covariationMatrix[i][i])
+		w_i := asset.W
+
+		weightedVolatilitySumm += w_i * assetVolatility
+	}
+
+	return weightedVolatilitySumm / generalVolatility
+
+}
+
+func (p *Portfolio) CalculateMarginalAndComponentContributions() ([]float64, []float64) {
+	assets := p.Assets
+	n := len(assets)
+
+	// if the portfolio is empty return an empty slice
+	if n == 0 {
+		return []float64{}, []float64{}
+	}
+
+	covariationMatrix := p.BuildCovariationMatrix()     // Σ-matrix
+	generalVolatility := p.CalculateGeneralVolatility() // general portfolio volatility
+
+	// if the volatility is equals to zero return empty slices
+	if generalVolatility == 0 {
+		return []float64{}, []float64{}
+	}
+
+	mcr := make([]float64, n)
+	cctr := make([]float64, n)
+
+	// 3. Calculate MCR and CCR througout one loop
+	for i := 0; i < n; i++ {
+		sigmaW_i := 0.0
+		for j := 0; j < n; j++ {
+			sigmaW_i += covariationMatrix[i][j] * assets[j].W
+		}
+
+		// MCR
+		mcr[i] = sigmaW_i / generalVolatility
+
+		// CCTR = w_i * MCR_i
+		cctr[i] = assets[i].W * mcr[i]
+	}
+
+	return mcr, cctr
+}
+
+func (p *Portfolio) CalculateEffectiveNA() float64 {
+	assets := p.Assets
+
+	if len(assets) == 0 {
+		return 0.0
+	}
+
+	weightedSum := 0.0
+
+	for _, asset := range assets {
+		w_i := asset.W
+		weightedSum += w_i * w_i
+	}
+
+	return 1 / weightedSum
 }
