@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type MacroMarketInstance struct {
+type MacroMarketSnapshotInstance struct {
 	Id             *int32
 	Date           *time.Time
 	OpenInterest   float64
@@ -24,7 +24,7 @@ type MacroMarketSnapshot struct {
 func (mms *MacroMarketSnapshot) CreateTable() error {
 	query := `CREATE TABLE IF NOT EXISTS macro_market_snapshot (
 		id SERIAL PRIMARY KEY,
-		date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		date TIMESTAMP DEFAULT NOT NULL DEFAULT NOW(),
 		open_interest DECIMAL NOT NULL,
 		capital_flow_usd DECIMAL NOT NULL,
 		btc_hashrate DECIMAL NOT NULL,
@@ -39,7 +39,7 @@ func (mms *MacroMarketSnapshot) CreateTable() error {
 	return nil
 }
 
-func (mms *MacroMarketSnapshot) Create(data MacroMarketInstance) (int32, error) {
+func (mms *MacroMarketSnapshot) Create(data MacroMarketSnapshotInstance) (int32, error) {
 	query := `INSERT INTO macro_market_snapshot (
 		open_interest,
 		capital_flow,
@@ -61,6 +61,10 @@ func (mms *MacroMarketSnapshot) Create(data MacroMarketInstance) (int32, error) 
 		data.BTCHashrate,
 		data.ETHHashrate,
 	).Scan(&id)
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to creade macro market snapshot instance: %w", err)
+	}
 
 	return id, err
 
