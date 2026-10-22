@@ -3,7 +3,7 @@
 
 ## Разработка Backend
 
-[Ссылка на код backend](https://github.com)
+[Ссылка на код backend](https://github.com/g00day/PortfolioTracker/tree/backend/dev)
 
 ### Цель 
 
