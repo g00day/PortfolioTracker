@@ -24,7 +24,7 @@ type MacroMarketSnapshot struct {
 func (mms *MacroMarketSnapshot) CreateTable() error {
 	query := `CREATE TABLE IF NOT EXISTS macro_market_snapshot (
 		id SERIAL PRIMARY KEY,
-		date TIMESTAMP DEFAULT NOT NULL DEFAULT NOW(),
+		date TIMESTAMP NOT NULL DEFAULT NOW(),
 		open_interest DECIMAL NOT NULL,
 		capital_flow_usd DECIMAL NOT NULL,
 		btc_hashrate DECIMAL NOT NULL,
@@ -42,15 +42,12 @@ func (mms *MacroMarketSnapshot) CreateTable() error {
 func (mms *MacroMarketSnapshot) Create(data MacroMarketSnapshotInstance) (int32, error) {
 	query := `INSERT INTO macro_market_snapshot (
 		open_interest,
-		capital_flow,
+		capital_flow_usd,
 		btc_hashrate,
-		eth_hashrate)
-	VALUES (
-		$1,
-		$2,
-		$3,
-		$4
-	) RETURNING id;`
+		eth_hashrate
+	) VALUES ($1, $2, $3, $4) 
+	RETURNING id;`
+
 	var id int32
 
 	err := mms.DBConn.QueryRow(context.Background(), query,
@@ -61,9 +58,8 @@ func (mms *MacroMarketSnapshot) Create(data MacroMarketSnapshotInstance) (int32,
 	).Scan(&id)
 
 	if err != nil {
-		return 0, fmt.Errorf("failed to creade macro market snapshot instance: %w", err)
+		return 0, fmt.Errorf("failed to create macro market snapshot instance: %w", err)
 	}
 
-	return id, err
-
+	return id, nil
 }
