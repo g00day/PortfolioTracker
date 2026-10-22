@@ -16,6 +16,8 @@ type Portfolio struct {
 	RiskFreeRate float64
 }
 
+const SQRT_365 = 19.1049731745428
+
 func (p *Portfolio) CalculateDailyLogarithmicIncome(ticker string) []float64 {
 	df := p.Datafetcher
 
@@ -191,10 +193,10 @@ func (p *Portfolio) CalculateMarginalAndComponentContributions() ([]float64, []f
 		}
 
 		// MCR
-		mcr[i] = sigmaW_i / generalVolatility
+		mcr[i] = (sigmaW_i / generalVolatility) * SQRT_365
 
 		// CCTR = w_i * MCR_i
-		cctr[i] = assets[i].W * mcr[i]
+		cctr[i] = (assets[i].W * mcr[i])
 	}
 
 	return mcr, cctr
