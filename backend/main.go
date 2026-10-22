@@ -33,4 +33,7 @@ func main() {
 	fmt.Println(p.CalculateMarginalAndComponentContributions())
 	fmt.Println(p.CalculateDiversificationRate())
 	fmt.Println(p.CalculateEffectiveNA())
+
+	fmt.Println(p.CalculateSharpeRatio())
+	fmt.Println(p.CalculateSortinoRatio())
 }

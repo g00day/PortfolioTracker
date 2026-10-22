@@ -218,3 +218,121 @@ func (p *Portfolio) CalculateEffectiveNA() float64 {
 
 	return 1 / weightedSum
 }
+
+func (p *Portfolio) CalculateAnnualizedPortfolioReturn() float64 {
+	assets := p.Assets
+	n := len(assets)
+	if n == 0 {
+		return 0.0
+	}
+
+	portfolioReturn := 0.0
+
+	for _, asset := range assets {
+		dailyIncomes := p.CalculateDailyLogarithmicIncome(asset.Ticker)
+		if len(dailyIncomes) == 0 {
+			continue
+		}
+
+		// Calculate the mean of daily logarithmic incomes
+		totalDailyIncome := 0.0
+		for _, income := range dailyIncomes {
+			totalDailyIncome += income
+		}
+		avgDailyReturn := totalDailyIncome / float64(len(dailyIncomes))
+
+		// Annualize daily log return by multiplying by 365 days
+		annualAssetReturn := avgDailyReturn * 365.0
+
+		// Add weighted asset return to the total portfolio return
+		portfolioReturn += asset.W * annualAssetReturn
+	}
+
+	return portfolioReturn
+}
+
+func (p *Portfolio) CalculateSharpeRatio() float64 {
+	annualVolatility := p.CalculateGeneralVolatility() * SQRT_365
+	if annualVolatility == 0 {
+		return 0.0
+	}
+
+	// Get the annualized portfolio return
+	annualReturn := p.CalculateAnnualizedPortfolioReturn()
+
+	// Sharpe Ratio = (Portfolio Return - Risk-Free Rate) / Portfolio Volatility
+	sharpeRatio := (annualReturn - p.RiskFreeRate) / annualVolatility
+
+	return sharpeRatio
+}
+
+func (p *Portfolio) CalculateAnnualizedDownsideDeviation() float64 {
+	assets := p.Assets
+	n := len(assets)
+	if n == 0 {
+		return 0.0
+	}
+
+	// Convert annualized risk-free rate to a daily rate
+	dailyRf := p.RiskFreeRate / 365.0
+
+	// Cache logarithmic incomes for all assets to build portfolio daily history
+	logIncomes := make([][]float64, n)
+	var minHistoryLen int
+
+	for i, asset := range assets {
+		incomes := p.CalculateDailyLogarithmicIncome(asset.Ticker)
+		if i == 0 || len(incomes) < minHistoryLen {
+			minHistoryLen = len(incomes)
+		}
+		logIncomes[i] = incomes
+	}
+
+	if minHistoryLen == 0 {
+		return 0.0
+	}
+
+	// Construct historical daily portfolio returns and compute downside variance
+	downsideSum := 0.0
+	totalDays := 0
+
+	for t := 0; t < minHistoryLen; t++ {
+		portfolioDailyReturn := 0.0
+		for i, asset := range assets {
+			portfolioDailyReturn += asset.W * logIncomes[i][t]
+		}
+
+		// Calculate downside deviation relative to the daily risk-free rate
+		excessReturn := portfolioDailyReturn - dailyRf
+		if excessReturn < 0 {
+			downsideSum += excessReturn * excessReturn
+		}
+		totalDays++
+	}
+
+	if totalDays == 0 {
+		return 0.0
+	}
+
+	// Calculate daily downside variance and convert it to annualized downside deviation
+	dailyDownsideVariance := downsideSum / float64(totalDays)
+	dailyDownsideDeviation := math.Sqrt(dailyDownsideVariance)
+
+	return dailyDownsideDeviation * SQRT_365
+}
+
+func (p *Portfolio) CalculateSortinoRatio() float64 {
+	// Annualize portfolio return
+	annualReturn := p.CalculateAnnualizedPortfolioReturn()
+
+	// Calculate annualized downside deviation
+	annualDownsideDeviation := p.CalculateAnnualizedDownsideDeviation()
+	if annualDownsideDeviation == 0 {
+		return 0.0
+	}
+
+	// Sortino Ratio = (Portfolio Return - Risk-Free Rate) / Downside Deviation
+	sortinoRatio := (annualReturn - p.RiskFreeRate) / annualDownsideDeviation
+
+	return sortinoRatio
+}
