@@ -68,12 +68,8 @@ func (vc *VolatilityCursor) CalculateAnnualizedVolatilityDrag(symbol, marketType
 }
 
 func (vc *VolatilityCursor) PrepareParkinsonVolatilityDistributionData(
-	symbol string, period string, marketType string,
+	klines [][]float64,
 ) ([][2]float64, float64, error) {
-
-	df := vc.Datafetcher
-	klines := df.GetKlines(symbol, period, marketType)
-
 	totalKlines := len(klines)
 	if totalKlines == 0 {
 		return [][2]float64{}, 0.0, nil
@@ -126,7 +122,7 @@ func (vc *VolatilityCursor) PrepareParkinsonVolatilityDistributionData(
 		n := float64(i+1) * binStep
 
 		probability := float64(counts[i]) / float64(totalValid)
-		volPrice := n * lastPrice // Absolute price delta at current volatility
+		volPrice := n // Volatility delta in percentage (0.01 = 1%)
 
 		distributionData = append(distributionData, [2]float64{volPrice, probability})
 		expectedValue += volPrice * probability
@@ -135,10 +131,7 @@ func (vc *VolatilityCursor) PrepareParkinsonVolatilityDistributionData(
 	return distributionData, expectedValue, nil
 }
 
-func (vc *VolatilityCursor) CalculateLognormalParkinsonVaR(symbol, period, marketType string) (float64, float64, float64) {
-	df := vc.Datafetcher
-	klines := df.GetKlines(symbol, period, marketType)
-
+func (vc *VolatilityCursor) CalculateLognormalParkinsonVaR(klines [][]float64) (float64, float64, float64) {
 	totalKlines := len(klines)
 	if totalKlines == 0 {
 		return 0.0, 0.0, 0.0

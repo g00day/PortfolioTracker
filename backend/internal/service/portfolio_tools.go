@@ -7,6 +7,7 @@ import (
 
 type Asset struct {
 	Ticker string
+	Amount float64
 	W      float64 // the weight of the asset inside the portfolio
 }
 
@@ -113,8 +114,7 @@ func (p *Portfolio) BuildPirsonCorrelationMatrix() [][]float64 {
 	return correlationMatrix
 }
 
-func (p *Portfolio) CalculateGeneralVolatility() float64 {
-	covariationMatrix := p.BuildCovariationMatrix() // Σ-matrix
+func (p *Portfolio) CalculateGeneralVolatility(covariationMatrix [][]float64) float64 {
 	assets := p.Assets
 	n := len(assets)
 
@@ -151,7 +151,7 @@ func (p *Portfolio) CalculateDiversificationRate() float64 {
 	}
 
 	covariationMatrix := p.BuildCovariationMatrix()
-	generalVolatility := p.CalculateGeneralVolatility() // portfolio variance
+	generalVolatility := p.CalculateGeneralVolatility(covariationMatrix) // portfolio variance
 
 	for i, asset := range assets {
 
@@ -165,7 +165,7 @@ func (p *Portfolio) CalculateDiversificationRate() float64 {
 
 }
 
-func (p *Portfolio) CalculateMarginalAndComponentContributions() ([]float64, []float64) {
+func (p *Portfolio) CalculateMarginalAndComponentContributions(covariationMatrix [][]float64) ([]float64, []float64) {
 	assets := p.Assets
 	n := len(assets)
 
@@ -174,8 +174,7 @@ func (p *Portfolio) CalculateMarginalAndComponentContributions() ([]float64, []f
 		return []float64{}, []float64{}
 	}
 
-	covariationMatrix := p.BuildCovariationMatrix()     // Σ-matrix
-	generalVolatility := p.CalculateGeneralVolatility() // general portfolio volatility
+	generalVolatility := p.CalculateGeneralVolatility(covariationMatrix) // general portfolio volatility
 
 	// if the volatility is equals to zero return empty slices
 	if generalVolatility == 0 {
@@ -251,8 +250,8 @@ func (p *Portfolio) CalculateAnnualizedPortfolioReturn() float64 {
 	return portfolioReturn
 }
 
-func (p *Portfolio) CalculateSharpeRatio() float64 {
-	annualVolatility := p.CalculateGeneralVolatility() * SQRT_365
+func (p *Portfolio) CalculateSharpeRatio(covariationMatrix [][]float64) float64 {
+	annualVolatility := p.CalculateGeneralVolatility(covariationMatrix) * SQRT_365
 	if annualVolatility == 0 {
 		return 0.0
 	}

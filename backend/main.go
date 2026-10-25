@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	edf "portfolio-tracker/internal/adapter/exchanges_datafetcher"
 
 	service "portfolio-tracker/internal/service"
@@ -14,10 +13,11 @@ func main() {
 	//vc := service.VolatilityCursor{Datafetcher: *df}
 
 	assets := []service.Asset{
-		service.Asset{Ticker: "BTCUSDT", W: 0.5},
-		service.Asset{Ticker: "ETHUSDT", W: 0.5},
+		service.Asset{Ticker: "BTCUSDT", Amount: 1.1, W: 0.5},
+		service.Asset{Ticker: "ETHUSDT", Amount: 10.0, W: 0.5},
 	}
 	p := service.Portfolio{Datafetcher: *df, Assets: assets}
+	service.PresentRiskMetricks(&p)
 
 	//fmt.Print(p.BuildCovariationMatrix())
 
@@ -30,10 +30,10 @@ func main() {
 	//fmt.Println(vc.CalculateMediumParkinsonVolatility("BTCUSDT", "D", "spot"))
 
 	//fmt.Print(p.CalculateGeneralVolatility())
-	fmt.Println(p.CalculateMarginalAndComponentContributions())
-	fmt.Println(p.CalculateDiversificationRate())
-	fmt.Println(p.CalculateEffectiveNA())
+	//fmt.Println(p.CalculateMarginalAndComponentContributions())
+	//fmt.Println(p.CalculateDiversificationRate())
+	//fmt.Println(p.CalculateEffectiveNA())
 
-	fmt.Println(p.CalculateSharpeRatio())
-	fmt.Println(p.CalculateSortinoRatio())
+	//fmt.Println(p.CalculateSharpeRatio())
+	//fmt.Println(p.CalculateSortinoRatio())
 }
