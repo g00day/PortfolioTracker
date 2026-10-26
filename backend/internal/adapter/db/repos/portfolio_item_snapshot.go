@@ -8,18 +8,18 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type PortfolioItemSnapshot struct {
+type PortfolioItemSnapshotInstance struct {
 	Id              int32
 	Date            *time.Time
 	PortfolioItemId int32
 	Amount          float64
 }
 
-type PortfolioItemSnapshotRepo struct {
+type PortfolioItemSnapshot struct {
 	DBConn *pgx.Conn
 }
 
-func (r *PortfolioItemSnapshotRepo) CreateTable() error {
+func (r *PortfolioItemSnapshot) CreateTable() error {
 	query := `CREATE TABLE IF NOT EXISTS portfolio_item_snapshots (
 		id SERIAL PRIMARY KEY,
 		portfolio_item_id INT NOT NULL REFERENCES portfolio_items(id) ON DELETE CASCADE,
@@ -35,7 +35,7 @@ func (r *PortfolioItemSnapshotRepo) CreateTable() error {
 	return nil
 }
 
-func (r *PortfolioItemSnapshotRepo) Create(data PortfolioItemSnapshot) (int32, error) {
+func (r *PortfolioItemSnapshot) Create(data PortfolioItemSnapshotInstance) (int32, error) {
 	query := `INSERT INTO portfolio_item_snapshots (
 		portfolio_item_id,
 		amount,
@@ -58,10 +58,10 @@ func (r *PortfolioItemSnapshotRepo) Create(data PortfolioItemSnapshot) (int32, e
 	return id, nil
 }
 
-func (r *PortfolioItemSnapshotRepo) Read(id int32) (PortfolioItemSnapshot, error) {
+func (r *PortfolioItemSnapshot) Read(id int32) (PortfolioItemSnapshotInstance, error) {
 	query := `SELECT id, portfolio_item_id, amount, date FROM portfolio_item_snapshots WHERE id = $1;`
 
-	var data PortfolioItemSnapshot
+	var data PortfolioItemSnapshotInstance
 
 	err := r.DBConn.QueryRow(context.Background(), query, id).Scan(
 		&data.Id,
@@ -72,9 +72,9 @@ func (r *PortfolioItemSnapshotRepo) Read(id int32) (PortfolioItemSnapshot, error
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return PortfolioItemSnapshot{}, fmt.Errorf("portfolio item snapshot not found: %w", err)
+			return PortfolioItemSnapshotInstance{}, fmt.Errorf("portfolio item snapshot not found: %w", err)
 		}
-		return PortfolioItemSnapshot{}, fmt.Errorf("failed to read portfolio item snapshot: %w", err)
+		return PortfolioItemSnapshotInstance{}, fmt.Errorf("failed to read portfolio item snapshot: %w", err)
 	}
 
 	return data, nil
