@@ -15,9 +15,11 @@ func SendPasswordResetEmail(recipient, code string) error {
 	from := username
 	to := []string{recipient}
 
-	subject := "Запрос на смену пароля --PortfolioTracker\r\n"
+	subject := "Subject: Запрос на смену пароля -- PortfolioTracker\r\n"
 	mime := "MIME-version: 1.0;\r\nContent-Type: text/plain; charset=\"UTF-8\";\r\n"
-	body := "Ваш код: 123456. Никому не сообщайте этот код."
+
+	body := fmt.Sprintf("Ваш код: %s. Никому не сообщайте этот код. Код действителен 3 минуты.", code)
+
 	message := []byte(subject + mime + "\r\n" + body)
 
 	auth := smtp.PlainAuth("", username, password, smtpHost)

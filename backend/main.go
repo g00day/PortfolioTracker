@@ -20,10 +20,14 @@ func main() {
 		fmt.Println("failed to get .env file: %w", err)
 	}
 
+	fmt.Println("--- Trying set up DB tables ---")
+
 	_, err = dbu.SetUpTables()
 	if err != nil {
 		log.Fatalf("Failed to connect DB: %v", err)
 	}
+
+	fmt.Println("--- All DB tables set up successfully ---")
 
 	// determine a chi router - app core
 	r := chi.NewRouter()
@@ -33,13 +37,16 @@ func main() {
 
 	// endpoints list
 	r.Get("/health", handlers.HealthCheckHandler)
+
+	// Auth endpoints
 	r.Post("/register", handlers.RegistrationHandler)
 	r.Post("/login", handlers.LoginHandler)
 	r.Post("/request-password-reset", handlers.RequestPasswordResetHandler)
+	r.Post("/verify-otc", handlers.VerifyOneTimeCodeHandler)
 
 	port := os.Getenv("APP_PORT")
 
-	fmt.Printf("starting server on :%s", port)
+	fmt.Printf("--- starting server on :%s ---", port)
 	http.ListenAndServe(":8080", r)
 
 }

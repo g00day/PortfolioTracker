@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"crypto/rand"
 	"encoding/json"
+	"fmt"
+	"math/big"
 	"net/http"
 	database "portfolio-tracker/internal/adapter/db"
 	"portfolio-tracker/internal/adapter/db/repos"
-
 	smtp "portfolio-tracker/internal/service/smtp"
 )
 
@@ -16,6 +18,16 @@ type RequestPasswordResetRequest struct {
 type APIResponse struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
+}
+
+// code generating repo
+func generateRandomCode() (string, error) {
+	max := big.NewInt(1000000)
+	n, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%06d", n.Int64()), nil
 }
 
 func RequestPasswordResetHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +65,30 @@ func RequestPasswordResetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = smtp.SendPasswordResetEmail(req.Email, "123456")
+	otc := repos.OneTimeCode{DBConn: dbConn}
+
+	err = otc.InvalidateOldCodes(req.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to invalidate old reset codes"})
+		return
+	}
+
+	code, err := generateRandomCode()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to generate security code"})
+		return
+	}
+
+	_, err = otc.Create(req.Email, code)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to save reset code"})
+		return
+	}
+
+	err = smtp.SendPasswordResetEmail(req.Email, code)
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to send password reset email"})

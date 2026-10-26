@@ -13,6 +13,7 @@ func SetUpTables() ([]error, error) {
 		return nil, err
 	}
 
+	otc := &r.OneTimeCode{DBConn: dbConn}
 	mms := &r.MacroMarketSnapshot{DBConn: dbConn}
 	u := &r.User{DBConn: dbConn}
 	a := &r.Asset{DBConn: dbConn}
@@ -24,6 +25,7 @@ func SetUpTables() ([]error, error) {
 
 	var errSlice []error
 
+	errSlice = append(errSlice, otc.CreateTable())
 	errSlice = append(errSlice, mms.CreateTable())
 	errSlice = append(errSlice, u.CreateTable())
 	errSlice = append(errSlice, a.CreateTable())
