@@ -39,11 +39,11 @@ func main() {
 	r.Get("/health", handlers.HealthCheckHandler)
 
 	// Auth endpoints
-	r.Post("/register", handlers.RegistrationHandler)
-	r.Post("/login", handlers.LoginHandler)
-	r.Post("/request-password-reset", handlers.RequestPasswordResetHandler)
-	r.Post("/verify-otc", handlers.VerifyOneTimeCodeHandler)
-	r.Post("/reset-password", handlers.ResetPasswordHandler)
+	r.Post("auth/register", handlers.RegistrationHandler)
+	r.Post("auth/login", handlers.LoginHandler)
+	r.Post("auth/request-password-reset", handlers.RequestPasswordResetHandler)
+	r.Post("auth/verify-otc", handlers.VerifyOneTimeCodeHandler)
+	r.Post("auth/reset-password", handlers.ResetPasswordHandler)
 
 	port := os.Getenv("APP_PORT")
 
