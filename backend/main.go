@@ -43,6 +43,7 @@ func main() {
 	r.Post("/login", handlers.LoginHandler)
 	r.Post("/request-password-reset", handlers.RequestPasswordResetHandler)
 	r.Post("/verify-otc", handlers.VerifyOneTimeCodeHandler)
+	r.Post("/reset-password", handlers.ResetPasswordHandler)
 
 	port := os.Getenv("APP_PORT")
 

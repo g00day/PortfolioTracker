@@ -158,6 +158,21 @@ func (u *User) Update(id int32, data UserInstance) error {
 	return nil
 }
 
+func (u *User) UpdatePassword(ctx context.Context, email string, hashedPassword string) error {
+	query := `UPDATE users SET password_hash = $1 WHERE email = $2;`
+
+	res, err := u.DBConn.Exec(context.Background(), query, hashedPassword, email)
+	if err != nil {
+		return fmt.Errorf("failed to update user password: %w", err)
+	}
+
+	if res.RowsAffected() == 0 {
+		return fmt.Errorf("user not found")
+	}
+
+	return nil
+}
+
 func (u *User) Delete(id int32) error {
 	query := `DELETE FROM users WHERE id = $1`
 
