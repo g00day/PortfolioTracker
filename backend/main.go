@@ -33,6 +33,7 @@ func main() {
 
 	r.Get("/health", handlers.HealthCheckHandler)
 	r.Post("/register", handlers.RegistrationHandler)
+	r.Post("/login", handlers.LoginHandler)
 
 	port := os.Getenv("APP_PORT")
 
