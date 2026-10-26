@@ -1,8 +1,9 @@
-package service
+package handlers
 
 import (
 	"fmt"
 	edf "portfolio-tracker/internal/adapter/exchanges_datafetcher"
+	"portfolio-tracker/internal/service"
 )
 
 type LognormalVaRUSD struct {
@@ -28,10 +29,10 @@ type PartialRiskAsset struct {
 	Contributions ContributionMetricks
 }
 
-func PresentRiskMetricks(p *Portfolio) {
+func PresentRiskMetricks(p *service.Portfolio) {
 	cs := edf.NewConnectionSettings()
 	df := edf.NewCrossMarketDataFetcher(&cs, 1000)
-	vc := VolatilityCursor{Datafetcher: *df}
+	vc := service.VolatilityCursor{Datafetcher: *df}
 	assets := p.Assets
 
 	// lognormal volatility quantiles(Mu, Q90, Q95, Q99)

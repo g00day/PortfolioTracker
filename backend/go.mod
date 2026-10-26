@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/andybalholm/brotli v1.2.2 // indirect
+	github.com/go-chi/chi/v5 v5.5.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/icholy/digest v1.2.0 // indirect
 	github.com/imroc/req/v3 v3.61.0 // indirect

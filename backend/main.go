@@ -1,39 +1,41 @@
 package main
 
 import (
-	edf "portfolio-tracker/internal/adapter/exchanges_datafetcher"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
 
-	service "portfolio-tracker/internal/service"
+	dbu "portfolio-tracker/internal/adapter/db/utils"
+	"portfolio-tracker/internal/service/handlers"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	connectionSettings := edf.NewConnectionSettings()
-	df := edf.NewCrossMarketDataFetcher(&connectionSettings, 1000)
-
-	//vc := service.VolatilityCursor{Datafetcher: *df}
-
-	assets := []service.Asset{
-		service.Asset{Ticker: "BTCUSDT", Amount: 1.1, W: 0.5},
-		service.Asset{Ticker: "ETHUSDT", Amount: 10.0, W: 0.5},
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("failed to get .env file: %w", err)
 	}
-	p := service.Portfolio{Datafetcher: *df, Assets: assets}
-	service.PresentRiskMetricks(&p)
 
-	//fmt.Print(p.BuildCovariationMatrix())
+	_, err = dbu.SetUpTables()
+	if err != nil {
+		log.Fatalf("Failed to connect DB: %v", err)
+	}
 
-	//fmt.Print(p.CalculateDailyLogarithmicIncome("BTCUSDT"))
+	// determine a chi router - app core
+	r := chi.NewRouter()
 
-	//fmt.Print(vc.PrepareParkinsonVolatilityDistributionData("BTCUSDT", "D", "spot"))
-	//fmt.Print(vc.CalculateAnnualizedParkinsonVolatility("BTCUSDT", "spot"))
-	//fmt.Print(vc.CalculateAnnualizedVolatilityDrag("BTCUSDT", "spot"))
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
-	//fmt.Println(vc.CalculateMediumParkinsonVolatility("BTCUSDT", "D", "spot"))
+	r.Get("/health", handlers.HealthCheckHandler)
 
-	//fmt.Print(p.CalculateGeneralVolatility())
-	//fmt.Println(p.CalculateMarginalAndComponentContributions())
-	//fmt.Println(p.CalculateDiversificationRate())
-	//fmt.Println(p.CalculateEffectiveNA())
+	port := os.Getenv("APP_PORT")
 
-	//fmt.Println(p.CalculateSharpeRatio())
-	//fmt.Println(p.CalculateSortinoRatio())
+	fmt.Printf("starting server on :%s", port)
+	http.ListenAndServe(":8080", r)
+
 }
