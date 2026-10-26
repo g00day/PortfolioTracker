@@ -31,9 +31,11 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	// endpoints list
 	r.Get("/health", handlers.HealthCheckHandler)
 	r.Post("/register", handlers.RegistrationHandler)
 	r.Post("/login", handlers.LoginHandler)
+	r.Post("/request-password-reset", handlers.RequestPasswordResetHandler)
 
 	port := os.Getenv("APP_PORT")
 

@@ -112,6 +112,29 @@ func (u *User) GetByUsername(username string) (UserInstance, error) {
 	return user, nil
 }
 
+func (u *User) GetByEmail(email string) (UserInstance, error) {
+	query := `SELECT id, username, email, password_hash, created_at FROM users WHERE email = $1`
+
+	var user UserInstance
+
+	err := u.DBConn.QueryRow(context.Background(), query, email).Scan(
+		&user.Id,
+		&user.Username,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return UserInstance{}, fmt.Errorf("user with email '%s' not found: %w", email, err)
+		}
+		return UserInstance{}, fmt.Errorf("failed to get user by email: %w", err)
+	}
+
+	return user, nil
+}
+
 func (u *User) Update(id int32, data UserInstance) error {
 	query := `UPDATE users 
 	SET username = $1, email = $2, password_hash = $3 
