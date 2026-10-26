@@ -32,6 +32,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/health", handlers.HealthCheckHandler)
+	r.Post("/register", handlers.RegistrationHandler)
 
 	port := os.Getenv("APP_PORT")
 
