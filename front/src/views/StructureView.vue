@@ -46,6 +46,11 @@ function goToAnalysis() {
   router.push('/portfolio/' + route.params.id)
 }
 
+function handleSidebarNavigation(sectionId) {
+  if (sectionId === 'structure') return
+  router.push(`/portfolio/${route.params.id}#${sectionId}`)
+}
+
 function closeAssetModal() {
   isAssetModalOpen.value = false
   symbol.value = ''
@@ -80,7 +85,12 @@ function addAsset() {
 
 <template>
   <div class="app-shell structure-shell">
-    <LeftBar @create-portfolio="isCreateModalOpen = true" />
+    <LeftBar
+      :portfolio-title="portfolioTitle"
+      active-section="structure"
+      @create-portfolio="isCreateModalOpen = true"
+      @navigate="handleSidebarNavigation"
+    />
     <main class="content structure-content">
       <div class="structure-header">
         <div>

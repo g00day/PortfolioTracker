@@ -20,7 +20,7 @@ function handleCreated(portfolioId) {
 
 <template>
   <div class="app-shell empty-portfolio-page">
-    <LeftBar :has-portfolio="false" />
+    <LeftBar :has-portfolio="false" @create-portfolio="openCreatePortfolio" />
 
     <main class="empty-portfolio-content">
       <button class="create-portfolio-button" @click="openCreatePortfolio">
@@ -31,4 +31,3 @@ function handleCreated(portfolioId) {
     <CreatePortfolioModal v-if="isModalOpen" @close="isModalOpen = false" @created="handleCreated" />
   </div>
 </template>
-

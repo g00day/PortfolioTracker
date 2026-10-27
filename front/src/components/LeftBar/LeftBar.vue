@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import logoUrl from '../../assets/logo.svg'
 import downIcon from '../../assets/down.svg'
@@ -10,52 +11,83 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  portfolioTitle: {
+    type: String,
+    default: 'Портфель №1',
+  },
+  activeSection: {
+    type: String,
+    default: '',
+  },
+  menuItems: {
+    type: Array,
+    default: () => [
+      { id: 'risk', label: 'Анализ рисков' },
+      { id: 'volatility', label: 'Volatility Drag' },
+      { id: 'pnl', label: 'Анализ P&L' },
+      { id: 'structure', label: 'Структура' },
+    ],
+  },
 })
 
-const emit = defineEmits(['createPortfolio'])
+const emit = defineEmits(['createPortfolio', 'navigate'])
 
+const router = useRouter()
 const isPortfolioMenuOpen = ref(false)
+const username = localStorage.getItem('username') || 'admin'
 
-const portfolioMenuItems = [
-  'Доходность',
-  'Риски&VaR',
-  'Настройки',
-]
+function selectSection(sectionId) {
+  emit('navigate', sectionId)
+}
+
+function logout() {
+  localStorage.removeItem('isAuthenticated')
+  localStorage.removeItem('username')
+  router.replace('/login')
+}
 </script>
 
 <template>
   <aside class="leftbar">
-    <img class="icon" :src="logoUrl" alt="Portfolio Tracker" />
-    <div class="name">Portfolio Tracker</div>
+    <div class="brand">
+      <img class="icon" :src="logoUrl" alt="">
+      <div class="name">Portfolio Tracker</div>
+    </div>
 
-    <nav v-if="props.hasPortfolio" class="portfolio-nav">
-      <div class="portfolio-selector">
-        <button class="portfolio-button" @click="isPortfolioMenuOpen = false">
-          Портфель №1
-        </button>
+    <nav v-if="props.hasPortfolio" class="portfolio-nav" aria-label="Навигация по портфелю">
+      <button
+        class="portfolio-selector"
+        type="button"
+        :aria-expanded="isPortfolioMenuOpen"
+        aria-controls="portfolio-section-menu"
+        @click="isPortfolioMenuOpen = !isPortfolioMenuOpen"
+      >
+        <span>{{ props.portfolioTitle }}</span>
+        <img :src="isPortfolioMenuOpen ? upIcon : downIcon" alt="">
+      </button>
 
-        <button class="portfolio-toggle" aria-label="Открыть меню портфеля" @click="isPortfolioMenuOpen = !isPortfolioMenuOpen">
-          <img :src="isPortfolioMenuOpen ? upIcon : downIcon" alt="">
-        </button>
-      </div>
-
-      <div v-if="isPortfolioMenuOpen" class="portfolio-menu">
-        <button v-for="item in portfolioMenuItems" :key="item" class="portfolio-menu-item">
-          {{ item }}
-        </button>
-      </div>
+      <Transition name="menu">
+        <div v-if="isPortfolioMenuOpen" id="portfolio-section-menu" class="portfolio-menu">
+          <button
+            v-for="item in props.menuItems"
+            :key="item.id"
+            class="portfolio-menu-item"
+            :class="{ active: props.activeSection === item.id }"
+            type="button"
+            @click="selectSection(item.id)"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+      </Transition>
     </nav>
 
     <div class="bottom">
-      <button class="create-button" @click="emit('createPortfolio')">Создать портфель</button>
-      <div class="user">admin</div>
-      <button class="logout-button">Выйти из аккаунта</button>
+      <button class="create-button" type="button" @click="emit('createPortfolio')">Создать портфель</button>
+      <div class="user">{{ username }}</div>
+      <button class="logout-button" type="button" @click="logout">Выйти из аккаунта</button>
     </div>
   </aside>
 </template>
 
 <style src="./LeftBar.css" scoped></style>
-
-
-
-
