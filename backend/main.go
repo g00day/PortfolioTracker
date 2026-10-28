@@ -79,7 +79,7 @@ func main() {
 	// portfolio items
 	r.Route("/portfolio-items", func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
-		r.Delete("/{id}/delete-item", pi_handlers.DeletePortfolioItem)
+		r.Delete("/{id}", pi_handlers.DeletePortfolioItem)
 	})
 
 	port := os.Getenv("APP_PORT")
