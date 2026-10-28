@@ -12,9 +12,9 @@ type TransactionInstance struct {
 	Id            *int32
 	PortfolioId   int32
 	PortfolioItem int32
+	Type          string  // "deposit" or "withdraw"
+	Amount        float64 // amount in asset
 	ProcessedAt   *time.Time
-	PriceUSD      float64
-	FeeUSDT       float64
 }
 
 type Transaction struct {
@@ -22,16 +22,29 @@ type Transaction struct {
 }
 
 func (t *Transaction) CreateTable() error {
+	createEnumQuery := `
+	DO $$ 
+	BEGIN 
+		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transaction_type') THEN 
+			CREATE TYPE transaction_type AS ENUM ('deposit', 'withdraw'); 
+		END IF; 
+	END $$;`
+
+	_, err := t.DBConn.Exec(context.Background(), createEnumQuery)
+	if err != nil {
+		return fmt.Errorf("failed to create transaction_type enum: %w", err)
+	}
+
 	query := `CREATE TABLE IF NOT EXISTS transactions (
 		id SERIAL PRIMARY KEY,
 		portfolio_id INT NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
 		portfolio_item_id INT NOT NULL REFERENCES portfolio_items(id) ON DELETE CASCADE,
-		price_usd DECIMAL NOT NULL,
-		fee_usdt DECIMAL NOT NULL,
+		type transaction_type NOT NULL,
+		amount DECIMAL NOT NULL,
 		processed_at TIMESTAMP NOT NULL DEFAULT NOW()
 	);`
 
-	_, err := t.DBConn.Exec(context.Background(), query)
+	_, err = t.DBConn.Exec(context.Background(), query)
 	if err != nil {
 		return fmt.Errorf("failed to create transactions table: %w", err)
 	}
@@ -43,8 +56,8 @@ func (t *Transaction) Create(data TransactionInstance) (int32, error) {
 	query := `INSERT INTO transactions (
 		portfolio_id,
 		portfolio_item_id,
-		price_usd,
-		fee_usdt,
+		type,
+		amount,
 		processed_at
 	) VALUES ($1, $2, $3, $4, COALESCE($5, NOW()))
 	RETURNING id;`
@@ -54,8 +67,8 @@ func (t *Transaction) Create(data TransactionInstance) (int32, error) {
 	err := t.DBConn.QueryRow(context.Background(), query,
 		data.PortfolioId,
 		data.PortfolioItem,
-		data.PriceUSD,
-		data.FeeUSDT,
+		data.Type,
+		data.Amount,
 		data.ProcessedAt,
 	).Scan(&id)
 
@@ -67,7 +80,7 @@ func (t *Transaction) Create(data TransactionInstance) (int32, error) {
 }
 
 func (t *Transaction) Read(id int32) (TransactionInstance, error) {
-	query := `SELECT id, portfolio_id, portfolio_item_id, price_usd, fee_usdt, processed_at 
+	query := `SELECT id, portfolio_id, portfolio_item_id, type, amount, processed_at 
 	          FROM transactions WHERE id = $1;`
 
 	var data TransactionInstance
@@ -76,8 +89,8 @@ func (t *Transaction) Read(id int32) (TransactionInstance, error) {
 		&data.Id,
 		&data.PortfolioId,
 		&data.PortfolioItem,
-		&data.PriceUSD,
-		&data.FeeUSDT,
+		&data.Type,
+		&data.Amount,
 		&data.ProcessedAt,
 	)
 
