@@ -73,3 +73,34 @@ func (rfr *RiskFreeRate) Read(id int32) (RiskFreeRateInstance, error) {
 
 	return data, nil
 }
+
+func (rfr *RiskFreeRate) ReadAll() ([]RiskFreeRateInstance, error) {
+	query := `SELECT id, name, value FROM risk_free_rate;`
+
+	rows, err := rfr.DBConn.Query(context.Background(), query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query risk free rates: %w", err)
+	}
+	defer rows.Close()
+
+	var rates []RiskFreeRateInstance
+
+	for rows.Next() {
+		var data RiskFreeRateInstance
+		err := rows.Scan(
+			&data.Id,
+			&data.Name,
+			&data.Value,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan risk free rate: %w", err)
+		}
+		rates = append(rates, data)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating risk free rates: %w", err)
+	}
+
+	return rates, nil
+}
