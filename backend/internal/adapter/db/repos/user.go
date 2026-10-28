@@ -23,8 +23,8 @@ type User struct {
 func (u *User) CreateTable() error {
 	query := `CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
-		username VARCHAR(40),
-		email VARCHAR(256),
+		username VARCHAR(40) NOT NULL UNIQUE,
+		email VARCHAR(256) NOT NULL UNIQUE,
 		password_hash VARCHAR(72) NOT NULL,
 		created_at TIMESTAMP NOT NULL DEFAULT NOW()
 	)`

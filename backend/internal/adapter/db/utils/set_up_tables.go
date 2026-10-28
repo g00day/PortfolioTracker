@@ -25,13 +25,20 @@ func SetUpTables() ([]error, error) {
 
 	var errSlice []error
 
-	errSlice = append(errSlice, otc.CreateTable())
-	errSlice = append(errSlice, mms.CreateTable())
+	// layer - 1. independent tables
 	errSlice = append(errSlice, u.CreateTable())
-	errSlice = append(errSlice, a.CreateTable())
 	errSlice = append(errSlice, rfr.CreateTable())
+	errSlice = append(errSlice, a.CreateTable())
+	errSlice = append(errSlice, mms.CreateTable())
+
+	// layer-2. rely on layer-1
+	errSlice = append(errSlice, otc.CreateTable())
 	errSlice = append(errSlice, p.CreateTable())
+
+	// layer-3. rely on layer-2
 	errSlice = append(errSlice, pi.CreateTable())
+
+	// layer-4. rely on layer-3
 	errSlice = append(errSlice, pis.CreateTable())
 	errSlice = append(errSlice, t.CreateTable())
 
