@@ -12,6 +12,7 @@ import (
 
 	auth_handlers "portfolio-tracker/internal/service/handlers/auth_handlers"
 	p_handlers "portfolio-tracker/internal/service/handlers/portfolio_handlers"
+	pi_handlers "portfolio-tracker/internal/service/handlers/portfolio_items_handlers"
 	rfr_handlers "portfolio-tracker/internal/service/handlers/risk_free_rates_handlers"
 
 	"portfolio-tracker/internal/service/middlewares"
@@ -46,11 +47,13 @@ func main() {
 	r.Get("/health", handlers.HealthCheckHandler)
 
 	// Auth endpoints
-	r.Post("/auth/register", auth_handlers.RegistrationHandler)
-	r.Post("/auth/login", auth_handlers.LoginHandler)
-	r.Post("/auth/request-password-reset", auth_handlers.RequestPasswordResetHandler)
-	r.Post("/auth/verify-otc", auth_handlers.VerifyOneTimeCodeHandler)
-	r.Post("/auth/reset-password", auth_handlers.ResetPasswordHandler)
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/register", auth_handlers.RegistrationHandler)
+		r.Post("/login", auth_handlers.LoginHandler)
+		r.Post("/request-password-reset", auth_handlers.RequestPasswordResetHandler)
+		r.Post("/verify-otc", auth_handlers.VerifyOneTimeCodeHandler)
+		r.Post("/reset-password", auth_handlers.ResetPasswordHandler)
+	})
 
 	// risk free rate endpoints
 	r.Route("/risk-free-rates", func(r chi.Router) {
@@ -71,6 +74,12 @@ func main() {
 		r.Delete("/{id}", p_handlers.DeletePortfolio)
 
 		r.Post("/{id}/add-item", p_handlers.AddPortfolioItem)
+	})
+
+	// portfolio items
+	r.Route("/portfolio-items", func(r chi.Router) {
+		r.Use(middlewares.AuthMiddleware)
+		r.Delete("/{id}/delete-item", pi_handlers.DeletePortfolioItem)
 	})
 
 	port := os.Getenv("APP_PORT")
