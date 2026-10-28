@@ -11,6 +11,7 @@ import (
 	handlers "portfolio-tracker/internal/service/handlers"
 
 	auth_handlers "portfolio-tracker/internal/service/handlers/auth_handlers"
+	p_handlers "portfolio-tracker/internal/service/handlers/portfolio_handlers"
 	rfr_handlers "portfolio-tracker/internal/service/handlers/risk_free_rates_handlers"
 
 	"portfolio-tracker/internal/service/middlewares"
@@ -51,13 +52,19 @@ func main() {
 	r.Post("/auth/verify-otc", auth_handlers.VerifyOneTimeCodeHandler)
 	r.Post("/auth/reset-password", auth_handlers.ResetPasswordHandler)
 
-	// free risk rate endpoints
+	// risk free rate endpoints
 	r.Route("/risk-free-rates", func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
 
 		r.Post("/", rfr_handlers.CreateRiskFreeRateHandler)
 		r.Get("/", rfr_handlers.ReadRiskFreeRates)
 		r.Get("/{id}", rfr_handlers.ReadRiskFreeRate)
+	})
+
+	r.Route("/portfolio", func(r chi.Router) {
+		r.Use(middlewares.AuthMiddleware)
+
+		r.Post("/", p_handlers.CreatePortfolio)
 	})
 
 	port := os.Getenv("APP_PORT")

@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,6 +15,10 @@ type AuthErrorResponse struct {
 	Status string `json:"status"`
 	Error  string `json:"error"`
 }
+
+type contextKey string
+
+const UserIDKey contextKey = "userID"
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +34,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(AuthErrorResponse{Status: "error", Error: "Invalid authorization format. Expected 'Bearer <token>'"})
+			json.NewEncoder(w).Encode(AuthErrorResponse{Status: "error", Error: "Invalid authorization format"})
 			return
 		}
 
@@ -53,6 +58,21 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r)
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(AuthErrorResponse{Status: "error", Error: "Invalid token claims"})
+			return
+		}
+
+		userIDFloat, ok := claims["sub"].(float64)
+		if !ok {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(AuthErrorResponse{Status: "error", Error: "Missing user identity in token"})
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), UserIDKey, int32(userIDFloat))
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
