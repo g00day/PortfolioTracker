@@ -7,7 +7,13 @@ import (
 	"os"
 
 	dbu "portfolio-tracker/internal/adapter/db/utils"
-	"portfolio-tracker/internal/service/handlers"
+
+	handlers "portfolio-tracker/internal/service/handlers"
+
+	auth_handlers "portfolio-tracker/internal/service/handlers/auth_handlers"
+	rfr_handlers "portfolio-tracker/internal/service/handlers/risk_free_rates_handlers"
+
+	"portfolio-tracker/internal/service/middlewares"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -39,11 +45,20 @@ func main() {
 	r.Get("/health", handlers.HealthCheckHandler)
 
 	// Auth endpoints
-	r.Post("auth/register", handlers.RegistrationHandler)
-	r.Post("auth/login", handlers.LoginHandler)
-	r.Post("auth/request-password-reset", handlers.RequestPasswordResetHandler)
-	r.Post("auth/verify-otc", handlers.VerifyOneTimeCodeHandler)
-	r.Post("auth/reset-password", handlers.ResetPasswordHandler)
+	r.Post("/auth/register", auth_handlers.RegistrationHandler)
+	r.Post("/auth/login", auth_handlers.LoginHandler)
+	r.Post("/auth/request-password-reset", auth_handlers.RequestPasswordResetHandler)
+	r.Post("/auth/verify-otc", auth_handlers.VerifyOneTimeCodeHandler)
+	r.Post("/auth/reset-password", auth_handlers.ResetPasswordHandler)
+
+	// free risk rate endpoints
+	r.Route("/risk-free-rates", func(r chi.Router) {
+		r.Use(middlewares.AuthMiddleware)
+
+		r.Post("/", rfr_handlers.CreateRiskFreeRateHandler)
+		r.Get("/", rfr_handlers.ReadRiskFreeRates)
+		r.Get("/{id}", rfr_handlers.ReadRiskFreeRate)
+	})
 
 	port := os.Getenv("APP_PORT")
 
