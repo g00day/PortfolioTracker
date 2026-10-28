@@ -61,10 +61,11 @@ func main() {
 		r.Get("/{id}", rfr_handlers.ReadRiskFreeRate)
 	})
 
-	r.Route("/portfolio", func(r chi.Router) {
+	r.Route("/portfolios", func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
 
 		r.Post("/", p_handlers.CreatePortfolio)
+		r.Get("/", p_handlers.ReadPortfolios)
 		r.Delete("/{id}", p_handlers.DeletePortfolio)
 	})
 

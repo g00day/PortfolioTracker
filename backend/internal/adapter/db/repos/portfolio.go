@@ -83,6 +83,41 @@ func (p *Portfolio) Read(id int32) (PortfolioInstance, error) {
 	return data, nil
 }
 
+func (p *Portfolio) ReadAllByUserID(userID int32) ([]PortfolioInstance, error) {
+	query := `SELECT id, user_id, risk_free_rate_id, name, created_at 
+	          FROM portfolios 
+	          WHERE user_id = $1;`
+
+	rows, err := p.DBConn.Query(context.Background(), query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query user portfolios: %w", err)
+	}
+	defer rows.Close()
+
+	var portfolios []PortfolioInstance
+
+	for rows.Next() {
+		var data PortfolioInstance
+		err := rows.Scan(
+			&data.Id,
+			&data.UserId,
+			&data.RiskFreeRateId,
+			&data.Name,
+			&data.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan portfolio: %w", err)
+		}
+		portfolios = append(portfolios, data)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating portfolios: %w", err)
+	}
+
+	return portfolios, nil
+}
+
 func (p *Portfolio) EditName(id int32, newName string) error {
 	query := `UPDATE portfolios SET name = $1 WHERE id = $2;`
 
