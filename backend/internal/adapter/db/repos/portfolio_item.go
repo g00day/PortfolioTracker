@@ -10,8 +10,8 @@ import (
 type PortfolioItemInstance struct {
 	Id             int32
 	PortfolioId    int32
-	AssetId        *int32 // Может быть null
-	RiskFreeRateId *int32 // Может быть null
+	Ticker         *string
+	RiskFreeRateId *int32
 	TotalAmount    float32
 }
 
@@ -23,14 +23,13 @@ func (pi *PortfolioItem) CreateTable() error {
 	query := `CREATE TABLE IF NOT EXISTS portfolio_items (
 		id SERIAL PRIMARY KEY,
 		portfolio_id INT NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
-		asset_id INT REFERENCES assets(id) ON DELETE CASCADE,
+		ticker VARCHAR(20),
 		risk_free_rate_id INT REFERENCES risk_free_rate(id) ON DELETE CASCADE,
 		total_amount DECIMAL NOT NULL,
 		
-		-- Ограничение: либо asset_id, либо risk_free_rate_id должен быть заполнен, но не оба сразу
 		CONSTRAINT chk_item_source CHECK (
-			(asset_id IS NOT NULL AND risk_free_rate_id IS NULL) OR
-			(asset_id IS NULL AND risk_free_rate_id IS NOT NULL)
+			(ticker IS NOT NULL AND ticker <> '' AND risk_free_rate_id IS NULL) OR
+			(ticker IS NULL AND risk_free_rate_id IS NOT NULL)
 		)
 	);`
 
@@ -45,7 +44,7 @@ func (pi *PortfolioItem) CreateTable() error {
 func (pi *PortfolioItem) Create(data PortfolioItemInstance) (int32, error) {
 	query := `INSERT INTO portfolio_items (
 		portfolio_id,
-		asset_id,
+		ticker,
 		risk_free_rate_id,
 		total_amount
 	) VALUES ($1, $2, $3, $4)
@@ -55,7 +54,7 @@ func (pi *PortfolioItem) Create(data PortfolioItemInstance) (int32, error) {
 
 	err := pi.DBConn.QueryRow(context.Background(), query,
 		data.PortfolioId,
-		data.AssetId,
+		data.Ticker,
 		data.RiskFreeRateId,
 		data.TotalAmount,
 	).Scan(&id)
@@ -68,7 +67,7 @@ func (pi *PortfolioItem) Create(data PortfolioItemInstance) (int32, error) {
 }
 
 func (pi *PortfolioItem) Read(id int32) (PortfolioItemInstance, error) {
-	query := `SELECT id, portfolio_id, asset_id, risk_free_rate_id, total_amount 
+	query := `SELECT id, portfolio_id, ticker, risk_free_rate_id, total_amount 
 	          FROM portfolio_items WHERE id = $1;`
 
 	var data PortfolioItemInstance
@@ -76,7 +75,7 @@ func (pi *PortfolioItem) Read(id int32) (PortfolioItemInstance, error) {
 	err := pi.DBConn.QueryRow(context.Background(), query, id).Scan(
 		&data.Id,
 		&data.PortfolioId,
-		&data.AssetId,
+		&data.Ticker,
 		&data.RiskFreeRateId,
 		&data.TotalAmount,
 	)

@@ -61,6 +61,7 @@ func main() {
 		r.Get("/{id}", rfr_handlers.ReadRiskFreeRate)
 	})
 
+	// portfolio endpoints
 	r.Route("/portfolios", func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
 
@@ -68,6 +69,8 @@ func main() {
 		r.Get("/", p_handlers.ReadPortfolios)
 		r.Put("/{id}", p_handlers.UpdatePortfolio)
 		r.Delete("/{id}", p_handlers.DeletePortfolio)
+
+		r.Post("/{id}/add-item", p_handlers.AddPortfolioItem)
 	})
 
 	port := os.Getenv("APP_PORT")
