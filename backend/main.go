@@ -65,6 +65,7 @@ func main() {
 		r.Use(middlewares.AuthMiddleware)
 
 		r.Post("/", p_handlers.CreatePortfolio)
+		r.Delete("/{id}", p_handlers.DeletePortfolio)
 	})
 
 	port := os.Getenv("APP_PORT")

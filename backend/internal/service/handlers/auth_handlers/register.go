@@ -2,6 +2,7 @@ package authhandlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	database "portfolio-tracker/internal/adapter/db"
 	"portfolio-tracker/internal/adapter/db/repos"
@@ -69,6 +70,6 @@ func RegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(RegisterResponse{
 		Status:  "success",
-		Message: "Successfully registered user with id: " + string(uid),
+		Message: fmt.Sprintf("Successfully registered user with id: %v", uid),
 	})
 }
