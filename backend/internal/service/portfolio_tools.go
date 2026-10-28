@@ -9,6 +9,10 @@ type Asset struct {
 	Ticker string
 	Amount float64
 	W      float64 // the weight of the asset inside the portfolio
+
+	// specially for risk-free rates
+	IsRiskFree     bool
+	RiskFreeReward float64 // only percents: 0.06, 0.035
 }
 
 type Portfolio struct {
@@ -19,10 +23,22 @@ type Portfolio struct {
 
 const SQRT_365 = 19.1049731745428
 
-func (p *Portfolio) CalculateDailyLogarithmicIncome(ticker string) []float64 {
+func (p *Portfolio) CalculateDailyRiskFreeLogarithmicIncome(value float64) float64 {
+	dailyIncome := math.Log(1+value) / 365
+
+	return dailyIncome
+}
+
+func (p *Portfolio) CalculateDailyLogarithmicIncome(asset Asset) []float64 {
+	// If the asset is a risk-free rate, compute its constant daily log return directly from reward rate
+	if asset.IsRiskFree {
+		dailyIncome := p.CalculateDailyRiskFreeLogarithmicIncome(asset.RiskFreeReward)
+		return []float64{dailyIncome}
+	}
+
 	df := p.Datafetcher
 
-	klines := df.GetKlines(ticker, "D", "spot") // defaultly for D timeframe
+	klines := df.GetKlines(asset.Ticker, "D", "spot") // defaultly for D timeframe
 	var logarithmicIncomes []float64
 
 	for i := 0; i < len(klines); i++ {
@@ -40,8 +56,14 @@ func (p *Portfolio) CalculateDailyLogarithmicIncome(ticker string) []float64 {
 	return logarithmicIncomes
 }
 
-func (p *Portfolio) CalculateDailyAssetCorrelation(ticker1, ticker2 string) float64 {
-	ticker1Income, ticker2Income := p.CalculateDailyLogarithmicIncome(ticker1), p.CalculateDailyLogarithmicIncome(ticker2)
+func (p *Portfolio) CalculateDailyAssetCorrelation(asset1, asset2 Asset) float64 {
+	// Risk-free rates have zero volatility, resulting in an undefined mathematical correlation (0/0).
+	// We handle this by explicitly defaulting their cross-asset correlation to 0.0.
+	if asset1.IsRiskFree || asset2.IsRiskFree {
+		return 0.0
+	}
+
+	ticker1Income, ticker2Income := p.CalculateDailyLogarithmicIncome(asset1), p.CalculateDailyLogarithmicIncome(asset2)
 
 	correlation := CalculatePirsonCorrelation(ticker1Income, ticker2Income)
 
@@ -61,15 +83,28 @@ func (p *Portfolio) BuildCovariationMatrix() [][]float64 {
 	// Cache logarithmic incomes so we don't recalculate them
 	logIncomes := make([][]float64, n)
 	for i, asset := range assets {
-		logIncomes[i] = p.CalculateDailyLogarithmicIncome(asset.Ticker)
+		logIncomes[i] = p.CalculateDailyLogarithmicIncome(asset)
 	}
 
 	for i := 0; i < n; i++ {
+		// Risk-free rates do not fluctuate, meaning their variance is zero
+		if assets[i].IsRiskFree {
+			covariationMatrix[i][i] = 0.0
+			continue
+		}
+
 		// Does not spend time to calculate logarithmic incomes, covariation etc
 		// if it is the same asset
 		covariationMatrix[i][i] = CalculateVariance(logIncomes[i])
 
 		for j := i + 1; j < n; j++ {
+			// Cross-covariance involving a risk-free rate is always zero
+			if assets[j].IsRiskFree {
+				covariationMatrix[i][j] = 0.0
+				covariationMatrix[j][i] = 0.0
+				continue
+			}
+
 			cov := CalculateCovariation(logIncomes[i], logIncomes[j])
 
 			// Matrix is symmetric, so fill it mirrorwise
@@ -94,7 +129,7 @@ func (p *Portfolio) BuildPirsonCorrelationMatrix() [][]float64 {
 	// Cache logarithmic incomes so we don't recalculate them
 	logIncomes := make([][]float64, n)
 	for i, asset := range assets {
-		logIncomes[i] = p.CalculateDailyLogarithmicIncome(asset.Ticker)
+		logIncomes[i] = p.CalculateDailyLogarithmicIncome(asset)
 	}
 
 	for i := 0; i < n; i++ {
@@ -103,6 +138,13 @@ func (p *Portfolio) BuildPirsonCorrelationMatrix() [][]float64 {
 		correlationMatrix[i][i] = 1.0
 
 		for j := i + 1; j < n; j++ {
+			// Risk-free rates have zero correlation to market assets
+			if assets[i].IsRiskFree || assets[j].IsRiskFree {
+				correlationMatrix[i][j] = 0.0
+				correlationMatrix[j][i] = 0.0
+				continue
+			}
+
 			corr := CalculatePirsonCorrelation(logIncomes[i], logIncomes[j])
 
 			// Matrix is symmetric, so fill it mirrorwise
@@ -141,7 +183,7 @@ func (p *Portfolio) CalculateGeneralVolatility(covariationMatrix [][]float64) fl
 	return math.Sqrt(variance)
 }
 
-func (p *Portfolio) CalculateDiversificationRate() float64 {
+func (p *Portfolio) CalculateDiversificationRate(covariationMatrix [][]float64) float64 {
 	weightedVolatilitySumm := 0.0
 
 	assets := p.Assets
@@ -150,8 +192,12 @@ func (p *Portfolio) CalculateDiversificationRate() float64 {
 		return 0.0
 	}
 
-	covariationMatrix := p.BuildCovariationMatrix()
 	generalVolatility := p.CalculateGeneralVolatility(covariationMatrix) // portfolio variance
+
+	// Safeguard against division by zero if portfolio contains only risk-free assets
+	if generalVolatility == 0 {
+		return 0.0
+	}
 
 	for i, asset := range assets {
 
@@ -162,7 +208,6 @@ func (p *Portfolio) CalculateDiversificationRate() float64 {
 	}
 
 	return weightedVolatilitySumm / generalVolatility
-
 }
 
 func (p *Portfolio) CalculateMarginalAndComponentContributions(covariationMatrix [][]float64) ([]float64, []float64) {
@@ -228,7 +273,14 @@ func (p *Portfolio) CalculateAnnualizedPortfolioReturn() float64 {
 	portfolioReturn := 0.0
 
 	for _, asset := range assets {
-		dailyIncomes := p.CalculateDailyLogarithmicIncome(asset.Ticker)
+		// Calculate the annualized yield of a risk-free rate directly without klines
+		if asset.IsRiskFree {
+			annualAssetReturn := math.Log(1 + asset.RiskFreeReward)
+			portfolioReturn += asset.W * annualAssetReturn
+			continue
+		}
+
+		dailyIncomes := p.CalculateDailyLogarithmicIncome(asset)
 		if len(dailyIncomes) == 0 {
 			continue
 		}
@@ -278,16 +330,24 @@ func (p *Portfolio) CalculateAnnualizedDownsideDeviation() float64 {
 	// Cache logarithmic incomes for all assets to build portfolio daily history
 	logIncomes := make([][]float64, n)
 	var minHistoryLen int
+	hasMarketAssets := false
 
 	for i, asset := range assets {
-		incomes := p.CalculateDailyLogarithmicIncome(asset.Ticker)
-		if i == 0 || len(incomes) < minHistoryLen {
+		if asset.IsRiskFree {
+			logIncomes[i] = p.CalculateDailyLogarithmicIncome(asset)
+			continue
+		}
+
+		incomes := p.CalculateDailyLogarithmicIncome(asset)
+		if !hasMarketAssets || len(incomes) < minHistoryLen {
 			minHistoryLen = len(incomes)
 		}
 		logIncomes[i] = incomes
+		hasMarketAssets = true
 	}
 
-	if minHistoryLen == 0 {
+	// If the portfolio only contains risk-free instruments, market downside risk is non-existent
+	if !hasMarketAssets || minHistoryLen == 0 {
 		return 0.0
 	}
 
@@ -298,7 +358,12 @@ func (p *Portfolio) CalculateAnnualizedDownsideDeviation() float64 {
 	for t := 0; t < minHistoryLen; t++ {
 		portfolioDailyReturn := 0.0
 		for i, asset := range assets {
-			portfolioDailyReturn += asset.W * logIncomes[i][t]
+			if asset.IsRiskFree {
+				// Risk free returns use a single scalar index cached on position [0]
+				portfolioDailyReturn += asset.W * logIncomes[i][0]
+			} else {
+				portfolioDailyReturn += asset.W * logIncomes[i][t]
+			}
 		}
 
 		// Calculate downside deviation relative to the daily risk-free rate
@@ -329,9 +394,7 @@ func (p *Portfolio) CalculateSortinoRatio() float64 {
 	if annualDownsideDeviation == 0 {
 		return 0.0
 	}
-
 	// Sortino Ratio = (Portfolio Return - Risk-Free Rate) / Downside Deviation
 	sortinoRatio := (annualReturn - p.RiskFreeRate) / annualDownsideDeviation
-
 	return sortinoRatio
 }

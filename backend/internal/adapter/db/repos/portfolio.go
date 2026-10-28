@@ -118,6 +118,41 @@ func (p *Portfolio) ReadAllByUserID(userID int32) ([]PortfolioInstance, error) {
 	return portfolios, nil
 }
 
+func (pi *PortfolioItem) ReadAllByPortfolio(portfolioID int32) ([]PortfolioItemInstance, error) {
+	query := `SELECT id, portfolio_id, ticker, risk_free_rate_id, total_amount 
+	          FROM portfolio_items 
+	          WHERE portfolio_id = $1;`
+
+	rows, err := pi.DBConn.Query(context.Background(), query, portfolioID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query portfolio items: %w", err)
+	}
+	defer rows.Close()
+
+	var items []PortfolioItemInstance
+
+	for rows.Next() {
+		var data PortfolioItemInstance
+		err := rows.Scan(
+			&data.Id,
+			&data.PortfolioId,
+			&data.Ticker,
+			&data.RiskFreeRateId,
+			&data.TotalAmount,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan portfolio item: %w", err)
+		}
+		items = append(items, data)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating portfolio items: %w", err)
+	}
+
+	return items, nil
+}
+
 func (p *Portfolio) Update(id int32, data PortfolioInstance) error {
 	query := `UPDATE portfolios 
 	          SET name = $1, 
