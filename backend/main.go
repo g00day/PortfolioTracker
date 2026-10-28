@@ -66,6 +66,7 @@ func main() {
 
 		r.Post("/", p_handlers.CreatePortfolio)
 		r.Get("/", p_handlers.ReadPortfolios)
+		r.Put("/{id}", p_handlers.UpdatePortfolio)
 		r.Delete("/{id}", p_handlers.DeletePortfolio)
 	})
 

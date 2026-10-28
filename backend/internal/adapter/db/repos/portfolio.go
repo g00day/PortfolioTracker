@@ -118,12 +118,19 @@ func (p *Portfolio) ReadAllByUserID(userID int32) ([]PortfolioInstance, error) {
 	return portfolios, nil
 }
 
-func (p *Portfolio) EditName(id int32, newName string) error {
-	query := `UPDATE portfolios SET name = $1 WHERE id = $2;`
+func (p *Portfolio) Update(id int32, data PortfolioInstance) error {
+	query := `UPDATE portfolios 
+	          SET name = $1, 
+	              risk_free_rate_id = $2 
+	          WHERE id = $3;`
 
-	res, err := p.DBConn.Exec(context.Background(), query, newName, id)
+	res, err := p.DBConn.Exec(context.Background(), query,
+		data.Name,
+		data.RiskFreeRateId,
+		id,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to update portfolio name: %w", err)
+		return fmt.Errorf("failed to update portfolio: %w", err)
 	}
 
 	if res.RowsAffected() == 0 {
