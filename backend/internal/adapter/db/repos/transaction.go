@@ -103,3 +103,40 @@ func (t *Transaction) Read(id int32) (TransactionInstance, error) {
 
 	return data, nil
 }
+
+func (t *Transaction) ReadAllByPortfolio(portfolioID int32) ([]TransactionInstance, error) {
+	query := `SELECT id, portfolio_id, portfolio_item_id, type, amount, processed_at 
+	          FROM transactions 
+	          WHERE portfolio_id = $1
+	          ORDER BY processed_at DESC;`
+
+	rows, err := t.DBConn.Query(context.Background(), query, portfolioID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query portfolio transactions: %w", err)
+	}
+	defer rows.Close()
+
+	var transactions []TransactionInstance
+
+	for rows.Next() {
+		var data TransactionInstance
+		err := rows.Scan(
+			&data.Id,
+			&data.PortfolioId,
+			&data.PortfolioItem,
+			&data.Type,
+			&data.Amount,
+			&data.ProcessedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan transaction row: %w", err)
+		}
+		transactions = append(transactions, data)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating transactions: %w", err)
+	}
+
+	return transactions, nil
+}

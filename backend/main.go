@@ -74,9 +74,11 @@ func main() {
 		r.Delete("/{id}", p_handlers.DeletePortfolio)
 
 		r.Post("/{id}/add-item", p_handlers.AddPortfolioItem)
+
+		r.Get("/{id}/transactions", p_handlers.ReadPortfolioTransactions)
 	})
 
-	// portfolio items
+	// portfolio items endpoints
 	r.Route("/portfolio-items", func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
 		r.Delete("/{id}", pi_handlers.DeletePortfolioItem)
