@@ -73,9 +73,10 @@ func main() {
 		r.Put("/{id}", p_handlers.UpdatePortfolio)
 		r.Delete("/{id}", p_handlers.DeletePortfolio)
 
-		r.Post("/{id}/add-item", p_handlers.AddPortfolioItem)
+		r.Post("/{id}/items", p_handlers.AddPortfolioItem)
 
 		r.Get("/{id}/transactions", p_handlers.ReadPortfolioTransactions)
+		r.Post("/{id}/transactions", p_handlers.AddPortfolioTransaction)
 	})
 
 	// portfolio items endpoints

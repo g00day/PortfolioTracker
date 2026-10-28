@@ -90,6 +90,16 @@ func (pi *PortfolioItem) Read(id int32) (PortfolioItemInstance, error) {
 	return data, nil
 }
 
+func (pi *PortfolioItem) UpdateAmount(ctx context.Context, tx pgx.Tx, id int32, newAmount float32) error {
+	query := `UPDATE portfolio_items SET total_amount = $1 WHERE id = $2;`
+
+	_, err := tx.Exec(ctx, query, newAmount, id)
+	if err != nil {
+		return fmt.Errorf("failed to update portfolio item amount: %w", err)
+	}
+	return nil
+}
+
 func (pi *PortfolioItem) Delete(id int32) error {
 	query := `DELETE FROM portfolio_items WHERE id = $1;`
 

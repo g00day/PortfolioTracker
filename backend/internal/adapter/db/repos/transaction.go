@@ -52,6 +52,31 @@ func (t *Transaction) CreateTable() error {
 	return nil
 }
 
+func (t *Transaction) CreateWithTx(ctx context.Context, tx pgx.Tx, data TransactionInstance) (int32, error) {
+	query := `INSERT INTO transactions (
+		portfolio_id,
+		portfolio_item_id,
+		type,
+		amount,
+		processed_at
+	) VALUES ($1, $2, $3, $4, COALESCE($5, NOW()))
+	RETURNING id;`
+
+	var id int32
+	err := tx.QueryRow(ctx, query,
+		data.PortfolioId,
+		data.PortfolioItem,
+		data.Type,
+		data.Amount,
+		data.ProcessedAt,
+	).Scan(&id)
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to create transaction with tx: %w", err)
+	}
+	return id, nil
+}
+
 func (t *Transaction) Create(data TransactionInstance) (int32, error) {
 	query := `INSERT INTO transactions (
 		portfolio_id,
