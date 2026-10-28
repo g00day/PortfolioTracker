@@ -16,7 +16,6 @@ func SetUpTables() ([]error, error) {
 	otc := &r.OneTimeCode{DBConn: dbConn}
 	mms := &r.MacroMarketSnapshot{DBConn: dbConn}
 	u := &r.User{DBConn: dbConn}
-	a := &r.Asset{DBConn: dbConn}
 	rfr := &r.RiskFreeRate{DBConn: dbConn}
 	p := &r.Portfolio{DBConn: dbConn}
 	pi := &r.PortfolioItem{DBConn: dbConn}
@@ -28,7 +27,6 @@ func SetUpTables() ([]error, error) {
 	// layer - 1. independent tables
 	errSlice = append(errSlice, u.CreateTable())
 	errSlice = append(errSlice, rfr.CreateTable())
-	errSlice = append(errSlice, a.CreateTable())
 	errSlice = append(errSlice, mms.CreateTable())
 
 	// layer-2. rely on layer-1
