@@ -24,10 +24,7 @@ type VerifyOneTimeCodeResponse struct {
 }
 
 func generateResetToken(email string) (string, error) {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		secret = "default_secret_key_change_me_in_prod"
-	}
+	secret := os.Getenv("PURPOSE_JWT_SECRET")
 
 	claims := jwt.MapClaims{
 		"sub":     email,

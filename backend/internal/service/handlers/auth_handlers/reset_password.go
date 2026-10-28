@@ -40,7 +40,7 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	tokenString := headerParts[1]
 
 	// jwt validation
-	secret := os.Getenv("JWT_SECRET")
+	secret := os.Getenv("PURPOSE_JWT_SECRET")
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// check signature
