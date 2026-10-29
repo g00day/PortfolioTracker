@@ -31,6 +31,7 @@ type PartialRiskRow []interface{}
 
 type PortfolioRiskMetricsResponse struct {
 	PortfolioVaRQuantiles   VaRQuantiles     `json:"portfolioVaR_quantiles"`
+	PortfolioValueUSD       float64          `json:"portfolio_value_usd"`
 	PartialRisks            []PartialRiskRow `json:"partial_risks"`
 	VolatilityDrag          float64          `json:"volatility_drag"` // in percents
 	DiversificationRatio    float64          `json:"diversification_ratio"`
@@ -239,6 +240,7 @@ func GetPortfolioRiskMetrics(w http.ResponseWriter, r *http.Request) {
 			Q95: sumPortQ95USD,
 			Q99: sumPortQ99USD,
 		},
+		PortfolioValueUSD:       totalPortfolioValue,
 		PartialRisks:            partialRisks,
 		VolatilityDrag:          totalVolatilityDragSum * 100.0,
 		DiversificationRatio:    divRatio,

@@ -1,0 +1,7 @@
+.git
+.gitignore
+!.env.example
+portfolio-tracker.exe
+*.log
+tmp/
+coverage.out

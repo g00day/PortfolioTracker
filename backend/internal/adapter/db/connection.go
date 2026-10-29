@@ -16,9 +16,10 @@ func GetDBConnection() (*pgx.Conn, error) {
 	Mostly important that the connection must be closed
 	after using it
 	*/
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file -> %s", err)
+	// .env удобен при локальном запуске, но в Docker значения передаются
+	// непосредственно через environment.
+	if err := godotenv.Load(); err != nil {
+		log.Print(".env file not found; using environment variables")
 	}
 
 	// Connecting to postgres Database

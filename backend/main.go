@@ -27,7 +27,7 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Println("failed to get .env file: %w", err)
+		fmt.Println(".env file not found; using environment variables")
 	}
 
 	fmt.Println("--- Trying to get DB connection ---")
@@ -48,6 +48,13 @@ func main() {
 
 	fmt.Println("--- All DB tables set up successfully ---")
 
+	if os.Getenv("DEMO_SEED") == "true" {
+		if err := dbu.SeedDemoData(dbConn); err != nil {
+			log.Fatalf("Failed to seed demo data: %v", err)
+		}
+		fmt.Println("--- Demo account and analytics data are ready ---")
+	}
+
 	fmt.Println("--- Trying to set up background worker(scheduler) ---")
 
 	snapshotWorker := workers.NewSnapshotWorker(dbConn)
@@ -65,6 +72,7 @@ func main() {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(middlewares.CORSMiddleware)
 
 	// endpoints list
 	r.Get("/health", handlers.HealthCheckHandler)
@@ -115,8 +123,13 @@ func main() {
 	})
 
 	port := os.Getenv("APP_PORT")
+	if port == "" {
+		port = "8080"
+	}
 
 	fmt.Printf("--- starting server on :%s ---", port)
-	http.ListenAndServe(":8080", r)
+	if err := http.ListenAndServe(":"+port, r); err != nil {
+		log.Fatalf("server stopped: %v", err)
+	}
 
 }

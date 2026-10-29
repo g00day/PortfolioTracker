@@ -7,11 +7,14 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { api, extractCreatedId } from '../services/api'
 
 const router = useRouter()
 
-function createPortfolio() {
-  localStorage.setItem('portfolios', JSON.stringify(['1']))
-  router.push('/portfolio/1')
+async function createPortfolio() {
+  const rates = await api.getRiskFreeRates()
+  if (!rates.length) return
+  const result = await api.createPortfolio({ name: 'Портфель №1', risk_free_rate_id: rates[0].id })
+  router.push('/portfolio/' + extractCreatedId(result.message))
 }
 </script>

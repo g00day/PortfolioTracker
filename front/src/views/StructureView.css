@@ -45,7 +45,7 @@
 
 .asset-row {
   display: grid;
-  grid-template-columns: 1.1fr 1.35fr 1fr 1.35fr 1.35fr 1.1fr;
+  grid-template-columns: 1.1fr 1.35fr 1fr 1.35fr 1.35fr 1.1fr 1.2fr;
   min-height: 74px;
   align-items: center;
 }
@@ -80,6 +80,23 @@
 .asset-pnl {
   color: #45d154;
 }
+
+.transaction-button {
+  width: 100%;
+  border: 1px solid #079963;
+  border-radius: 5px;
+  padding: 8px 10px;
+  background: transparent;
+  color: #56d9aa;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.transaction-button:hover { background: rgb(7 153 99 / 16%); }
+.transaction-modal { padding-top: 22px; }
+.transaction-modal h2 { margin: 0 0 22px; color: #fff; font-size: 22px; }
+.transaction-modal input:disabled { opacity: .65; cursor: not-allowed; }
+.transaction-error { margin: -12px 0 18px; color: #ff9494; }
 
 .symbol-cell {
   gap: 7px;

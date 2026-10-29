@@ -1,6 +1,6 @@
 module portfolio-tracker
 
-go 1.24.3
+go 1.26.0
 
 require (
 	github.com/andybalholm/brotli v1.2.2 // indirect

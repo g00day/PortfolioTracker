@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import logoUrl from '../assets/logo.svg'
+import { api } from '../services/api'
 
 const router = useRouter()
 const step = ref(1)
@@ -12,12 +13,12 @@ const password = ref('')
 const repeatPassword = ref('')
 const error = ref('')
 
-function sendCode() {
+async function sendCode() {
   error.value = ''
-  step.value = 2
+  try { await api.requestPasswordReset(email.value); step.value = 2 } catch (e) { error.value = e.message }
 }
 
-function verifyCode() {
+async function verifyCode() {
   error.value = ''
 
   if (!code.value.trim()) {
@@ -25,16 +26,16 @@ function verifyCode() {
     return
   }
 
-  step.value = 3
+  try { await api.verifyOtc(email.value, code.value.trim()); step.value = 3 } catch (e) { error.value = e.message }
 }
 
-function changePassword() {
+async function changePassword() {
   if (password.value !== repeatPassword.value) {
     error.value = 'Пароли не совпадают'
     return
   }
 
-  router.push('/login')
+  try { await api.resetPassword(email.value, code.value.trim(), password.value); router.push('/login') } catch (e) { error.value = e.message }
 }
 </script>
 
@@ -52,14 +53,14 @@ function changePassword() {
       <form v-else-if="step === 2" class="reset-form" @submit.prevent="verifyCode">
         <p class="reset-hint">Код отправлен на {{ email }}</p>
         <label for="reset-code">Код из письма</label>
-        <input id="reset-code" v-model="code" type="text" inputmode="numeric" required>
+        <input id="reset-code" v-model="code" type="text" inputmode="numeric" placeholder="Например, 123456" autocomplete="one-time-code" required>
         <button class="reset-button" type="submit">Проверить код</button>
       </form>
       <form v-else class="reset-form" @submit.prevent="changePassword">
         <label for="new-password">Новый пароль</label>
-        <input id="new-password" v-model="password" type="password" required>
+        <input id="new-password" v-model="password" type="password" placeholder="Введите новый пароль" autocomplete="new-password" required>
         <label for="repeat-new-password">Повторите пароль</label>
-        <input id="repeat-new-password" v-model="repeatPassword" type="password" required>
+        <input id="repeat-new-password" v-model="repeatPassword" type="password" placeholder="Повторите новый пароль" autocomplete="new-password" required>
         <p v-if="error" class="reset-error">{{ error }}</p>
         <button class="reset-button" type="submit">Сохранить пароль</button>
       </form>

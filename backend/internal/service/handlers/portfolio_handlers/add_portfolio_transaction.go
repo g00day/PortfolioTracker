@@ -18,6 +18,7 @@ type AddPortfolioTransactionRequest struct {
 	PortfolioItemID int32      `json:"portfolio_item_id"`
 	Type            string     `json:"type"` // "deposit" or "withdraw"
 	Amount          float64    `json:"amount"`
+	PriceUSD        float64    `json:"price_usd"`
 	ProcessedAt     *time.Time `json:"processed_at,omitempty"`
 }
 
@@ -68,6 +69,12 @@ func AddPortfolioTransaction(w http.ResponseWriter, r *http.Request) {
 	if req.Amount <= 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Transaction amount must be greater than zero"})
+		return
+	}
+
+	if req.PriceUSD <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "price_usd must be greater than zero"})
 		return
 	}
 
@@ -139,6 +146,7 @@ func AddPortfolioTransaction(w http.ResponseWriter, r *http.Request) {
 		PortfolioItem: req.PortfolioItemID,
 		Type:          req.Type,
 		Amount:        req.Amount,
+		PriceUSD:      req.PriceUSD,
 		ProcessedAt:   req.ProcessedAt,
 	}
 

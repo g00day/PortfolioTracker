@@ -9,6 +9,7 @@ import (
 	"portfolio-tracker/internal/service/middlewares"
 	"sort"
 	"strconv"
+	"time"
 
 	database "portfolio-tracker/internal/adapter/db"
 
@@ -115,6 +116,7 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 
 	isItemRiskFreeMap := make(map[int32]bool)
 	var calculatedYields []AssetYieldInfo
+	var riskFreePrincipal float64
 
 	for i, item := range items {
 		var ticker string
@@ -144,19 +146,29 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 		}
 
 		isItemRiskFreeMap[item.Id] = isRF
+		if isRF {
+			riskFreePrincipal += float64(item.TotalAmount) * price
+		}
 
 		// calculate historical pnl
 		txs, txErr := tRepo.ReadAllByItem(item.Id)
 		var pnlUSD, pnlPercentage float64
 		if txErr == nil && len(txs) > 0 {
-			var mockTxAssets []service.Asset
-			for _, tx := range txs {
-				mockTxAssets = append(mockTxAssets, service.Asset{
-					Amount:         tx.Amount,
-					RiskFreeReward: tx.PriceUSD, // use RiskFreeReward as historical deposit price
-				})
+			if isRF {
+				pnlUSD = calculateRiskFreePnL(txs, assetRFReward, time.Now())
+				if item.TotalAmount > 0 {
+					pnlPercentage = pnlUSD / float64(item.TotalAmount) * 100
+					price = (float64(item.TotalAmount) + pnlUSD) / float64(item.TotalAmount)
+				}
+			} else {
+				var pricedDeposits []service.Asset
+				for _, tx := range txs {
+					if tx.Type == "deposit" && tx.PriceUSD > 0 {
+						pricedDeposits = append(pricedDeposits, service.Asset{Amount: tx.Amount, RiskFreeReward: tx.PriceUSD})
+					}
+				}
+				pnlUSD, pnlPercentage = service.CalculateItemPnL(pricedDeposits, price, float64(item.TotalAmount))
 			}
-			pnlUSD, pnlPercentage = service.CalculateItemPnL(mockTxAssets, price, float64(item.TotalAmount))
 		}
 
 		calculatedYields = append(calculatedYields, AssetYieldInfo{
@@ -220,6 +232,7 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 			assetPrices[i] * amount,
 			weight,
 			currentAssetPnL,
+			items[i].Id,
 		}
 	}
 
@@ -309,6 +322,10 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 		portfolioSeries = []float64{0.0}
 		fomoSeries = []float64{0.0}
 	}
+
+	// Extend the benchmark beyond the historical portfolio series so the UI
+	// can display a 30-day risk-free forecast.
+	riskFreeSeries = service.ProjectRiskFreePnL(riskFreeSeries, riskFreePrincipal, baselineRiskFreeRate, 30)
 
 	var covFomo, corrFomo float64
 	if len(portfolioSeries) > 1 {

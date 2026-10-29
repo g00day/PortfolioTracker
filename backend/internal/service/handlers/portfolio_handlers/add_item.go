@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"portfolio-tracker/internal/adapter/db/repos"
+	"portfolio-tracker/internal/adapter/exchanges_datafetcher"
 	"portfolio-tracker/internal/service/middlewares"
 	"strconv"
 
@@ -98,6 +99,31 @@ func AddPortfolioItem(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to add item to portfolio"})
 		return
+	}
+
+	// Store the opening cost basis so the structure endpoint can calculate
+	// actual P&L from the first moment the position exists.
+	openingPrice := 1.0
+	if isTickerValid {
+		settings := exchanges_datafetcher.NewConnectionSettings()
+		dataFetcher := exchanges_datafetcher.NewCrossMarketDataFetcher(&settings, 1000)
+		klines := dataFetcher.GetKlines(*req.Ticker, "D", "spot")
+		if len(klines) > 0 && klines[0][4] > 0 {
+			openingPrice = klines[0][4]
+		} else {
+			openingPrice = 0
+		}
+	}
+
+	if openingPrice > 0 {
+		tRepo := repos.Transaction{DBConn: dbConn}
+		_, _ = tRepo.Create(repos.TransactionInstance{
+			PortfolioId:   int32(portfolioID),
+			PortfolioItem: id,
+			Type:          "deposit",
+			Amount:        float64(req.TotalAmount),
+			PriceUSD:      openingPrice,
+		})
 	}
 
 	w.WriteHeader(http.StatusCreated)

@@ -9,6 +9,7 @@ import (
 	"portfolio-tracker/internal/service/middlewares"
 	"sort"
 	"strconv"
+	"time"
 
 	database "portfolio-tracker/internal/adapter/db"
 
@@ -107,6 +108,7 @@ func ReadPortfolioOverview(w http.ResponseWriter, r *http.Request) {
 	snapshotRepo := repos.PortfolioItemSnapshot{DBConn: dbConn}
 
 	isItemRiskFreeMap := make(map[int32]bool)
+	var riskFreePrincipal float64
 
 	for i, item := range items {
 		var ticker string
@@ -135,13 +137,21 @@ func ReadPortfolioOverview(w http.ResponseWriter, r *http.Request) {
 
 		isItemRiskFreeMap[item.Id] = isRF
 		tickers[i] = ticker
-		assetPrices[i] = price
-
-		currentVal := float64(item.TotalAmount) * price
-		totalPortfolioValue += currentVal
 
 		// Derive historical purchase metrics to calculate true initial value basis
 		txs, txErr := tRepo.ReadAllByItem(item.Id)
+		if isRF && txErr == nil {
+			rateValue := 0.0
+			if item.RiskFreeRateId != nil {
+				if rate, rateErr := rfrRepo.Read(*item.RiskFreeRateId); rateErr == nil { rateValue = rate.Value }
+			}
+			accrued := calculateRiskFreePnL(txs, rateValue, time.Now())
+			if item.TotalAmount > 0 { price = (float64(item.TotalAmount) + accrued) / float64(item.TotalAmount) }
+		}
+		assetPrices[i] = price
+		currentVal := float64(item.TotalAmount) * price
+		totalPortfolioValue += currentVal
+		if isRF { riskFreePrincipal += float64(item.TotalAmount) }
 		if txErr == nil && len(txs) > 0 {
 			var mockTxAssets []service.Asset
 			for _, tx := range txs {
@@ -290,6 +300,12 @@ func ReadPortfolioOverview(w http.ResponseWriter, r *http.Request) {
 	if len(portfolioSeries) == 0 {
 		riskFreeSeries, portfolioSeries, fomoSeries = []float64{0.0}, []float64{0.0}, []float64{0.0}
 	}
+
+	annualRiskFreeRate := 0.0
+	if rate, rateErr := rfrRepo.Read(portfolioData.RiskFreeRateId); rateErr == nil {
+		annualRiskFreeRate = rate.Value
+	}
+	riskFreeSeries = service.ProjectRiskFreePnL(riskFreeSeries, riskFreePrincipal, annualRiskFreeRate, 30)
 
 	// Deriving chronological Daily and Historical metrics from trailing series
 	var dailyPnLUSD, dailyPnLPct float64

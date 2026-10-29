@@ -38,7 +38,8 @@
 }
 
 .portfolio-selector,
-.create-button {
+.create-button,
+.rate-button {
   width: 100%;
   border: 0;
   border-radius: 9px;
@@ -63,12 +64,15 @@
 .portfolio-selector:hover,
 .portfolio-selector:focus-visible,
 .create-button:hover,
-.create-button:focus-visible {
+.create-button:focus-visible,
+.rate-button:hover,
+.rate-button:focus-visible {
   background: #0aaa70;
 }
 
 .portfolio-selector:focus-visible,
 .create-button:focus-visible,
+.rate-button:focus-visible,
 .portfolio-menu-item:focus-visible,
 .logout-button:focus-visible {
   outline: 2px solid #9ce7ce;
@@ -150,6 +154,117 @@
   padding: 10px 14px;
 }
 
+.rate-button {
+  min-height: 50px;
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  background: #263955;
+}
+
+.rate-button:hover,
+.rate-button:focus-visible {
+  background: #314968;
+}
+
+.rate-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(3 8 16 / 72%);
+}
+
+.rate-modal {
+  width: min(100%, 480px);
+  padding: 28px;
+  border: 1px solid #3c4d66;
+  border-radius: 12px;
+  background: #142238;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 45%);
+}
+
+.rate-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.rate-modal h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 24px;
+}
+
+.rate-modal-header button {
+  border: 0;
+  background: transparent;
+  color: #aeb9ca;
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rate-modal label {
+  display: block;
+  margin: 16px 0 8px;
+  color: #dce3ed;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.rate-modal input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #40526d;
+  border-radius: 8px;
+  outline: none;
+  background: #0c1728;
+  color: #fff;
+  font-size: 16px;
+}
+
+.rate-modal input:focus {
+  border-color: #16c784;
+  box-shadow: 0 0 0 3px rgb(22 199 132 / 14%);
+}
+
+.rate-modal small {
+  display: block;
+  margin-top: 8px;
+  color: #8f9caf;
+}
+
+.rate-message {
+  margin: 16px 0 0;
+  font-size: 14px;
+}
+
+.rate-error { color: #ff8585; }
+.rate-success { color: #5bdd9d; }
+
+.rate-submit {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 8px;
+  background: #079963;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rate-submit:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
 .user {
   margin: 0 10px 18px;
   padding: 18px;
@@ -198,6 +313,13 @@
   }
 
   .create-button {
+    min-height: 44px;
+    margin: 0;
+    font-size: 14px;
+  }
+
+  .rate-button {
+    grid-column: 1 / -1;
     min-height: 44px;
     margin: 0;
     font-size: 14px;

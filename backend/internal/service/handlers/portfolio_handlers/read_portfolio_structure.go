@@ -5,15 +5,17 @@ import (
 	"net/http"
 	"portfolio-tracker/internal/adapter/db/repos"
 	"portfolio-tracker/internal/adapter/exchanges_datafetcher"
+	"portfolio-tracker/internal/service"
 	"portfolio-tracker/internal/service/middlewares"
 	"strconv"
+	"time"
 
 	database "portfolio-tracker/internal/adapter/db"
 
 	"github.com/go-chi/chi/v5"
 )
 
-// Order: [Ticker, CurrentPrice, Amount, Cost, WeightPercentage, PnL(currently mock)]
+// Order: [Ticker, CurrentPrice, Amount, Cost, WeightPercentage, PnL]
 type StructureRow []interface{}
 
 type PortfolioStructureResponse struct {
@@ -86,11 +88,14 @@ func ReadPortfolioStructure(w http.ResponseWriter, r *http.Request) {
 	var totalPortfolioValue float64
 	prices := make([]float64, len(items))
 	tickers := make([]string, len(items))
+	pnls := make([]float64, len(items))
 	rfrRepo := repos.RiskFreeRate{DBConn: dbConn}
+	tRepo := repos.Transaction{DBConn: dbConn}
 
 	for i, item := range items {
 		var ticker string
 		var price float64
+		var riskFreeRate float64
 
 		if item.Ticker != nil {
 			ticker = *item.Ticker
@@ -104,6 +109,7 @@ func ReadPortfolioStructure(w http.ResponseWriter, r *http.Request) {
 				rfrData, err := rfrRepo.Read(*item.RiskFreeRateId)
 				if err == nil {
 					ticker = rfrData.Name
+					riskFreeRate = rfrData.Value
 				} else {
 					ticker = "RISK_FREE_RATE"
 				}
@@ -112,13 +118,32 @@ func ReadPortfolioStructure(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		// P&L is based on the weighted average acquisition price from deposit
+		// transactions. Withdrawals do not change the cost basis of the
+		// remaining position. Positions without priced deposits return zero.
+		transactions, txErr := tRepo.ReadAllByItem(item.Id)
+		if txErr == nil {
+			if item.RiskFreeRateId != nil {
+				pnls[i] = calculateRiskFreePnL(transactions, riskFreeRate, time.Now())
+				if item.TotalAmount > 0 {
+					price = (float64(item.TotalAmount) + pnls[i]) / float64(item.TotalAmount)
+				}
+			} else {
+				pricedDeposits := make([]service.Asset, 0, len(transactions))
+				for _, tx := range transactions {
+					if tx.Type == "deposit" && tx.Amount > 0 && tx.PriceUSD > 0 {
+						pricedDeposits = append(pricedDeposits, service.Asset{Amount: tx.Amount, RiskFreeReward: tx.PriceUSD})
+					}
+				}
+				pnls[i], _ = service.CalculateItemPnL(pricedDeposits, price, float64(item.TotalAmount))
+			}
+		}
 		tickers[i] = ticker
 		prices[i] = price
 		totalPortfolioValue += float64(item.TotalAmount) * price
 	}
 
 	structure := make([]StructureRow, len(items))
-	const pnlMock = 14000.00
 
 	for i, item := range items {
 		var weight float64
@@ -134,7 +159,8 @@ func ReadPortfolioStructure(w http.ResponseWriter, r *http.Request) {
 			amount,
 			prices[i] * amount,
 			weight,
-			pnlMock,
+			pnls[i],
+			item.Id,
 		}
 	}
 
