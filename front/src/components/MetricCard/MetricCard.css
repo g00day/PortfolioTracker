@@ -1,0 +1,7 @@
+.metric-card {
+  min-height: 195px;
+  padding: 22px 15px 10px;
+  border: 3px solid #079963;
+  background: #c6c1cb;
+  color: #080808;
+}

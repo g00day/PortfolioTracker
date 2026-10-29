@@ -1,0 +1,60 @@
+.metric-wrapper {
+  min-width: 0;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  height: 325px;
+  padding: 20px 16px 16px;
+}
+
+.gauge-value {
+  color: #080808;
+  font-size: 27px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.gauge {
+  position: relative;
+  width: 256px;
+  height: 128px;
+  margin: 36px auto 0;
+  overflow: hidden;
+  border-radius: 256px 256px 0 0;
+  background: #611817;
+}
+
+.gauge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #14645e;
+  clip-path: polygon(100% 0, 100% 100%, 50% 100%);
+}
+
+.metric-card h3 {
+  margin: auto 0 18px;
+  color: #ed2024;
+  font-size: 27px;
+  text-align: center;
+}
+
+.metric-details {
+  color: #fff;
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.metric-details ul {
+  margin: 24px 0 0;
+  padding-left: 38px;
+  line-height: 1.75;
+  list-style: disc;
+}
+
+.metric-details ul {
+  list-style-type: disc;
+  list-style-position: outside;
+}

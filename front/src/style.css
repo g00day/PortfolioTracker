@@ -1,0 +1,114 @@
+:root {
+  font-family: Arial, sans-serif;
+  color: #f7f7f8;
+  background: #1e273a;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  background: #1e273a;
+}
+
+.sidebar {
+  width: 243px;
+  min-height: 100vh;
+  padding: 12px 17px;
+  display: flex;
+  flex-direction: column;
+  background: #0d1728;
+}
+
+
+.content {
+  flex: 1;
+  padding: 110px 8.5% 40px;
+  overflow: hidden;
+}
+
+h1 { margin: 0 0 64px; font-size: 34px; }
+.tabs { display: flex; gap: 13px; margin: 0 0 30px 9px; }
+.tabs button,
+.periods button { border: 0; border-radius: 4px; padding: 11px 66px; background: #079963; color: #d3dedb; font-size: 21px; font-weight: 700; }
+.tabs .active { background: #00764f; color: #fff; }
+.chart-row { display: flex; align-items: center; gap: 45px; }
+.chart-panel { position: relative; flex: 1; max-width: 955px; height: 480px; overflow: hidden; border: 4px solid #079963; border-radius: 4px; background: #c6c1cb; }
+.chart-line { position: absolute; width: 125%; height: 4px; transform-origin: left center; }
+.chart-line-green { bottom: 0; left: 0; background: #54bd76; transform: rotate(-25deg); }
+.chart-line-yellow { bottom: 0; left: 0; background: #b5ad49; transform: rotate(-8deg); }
+.legend { padding: 12px 10px; border: 2px solid #258fa2; border-radius: 5px; font-size: 16px; font-weight: 700; line-height: 2; }
+.legend i { display: inline-block; width: 14px; height: 3px; margin-right: 5px; }
+.green { background: #54bd76; }
+.yellow { background: #b5ad49; }
+.periods { margin: 13px 0 10px; text-align: center; }
+.periods button { margin: 0 2px; padding: 6px 14px; background: #ddd; color: #222; font-size: 16px; }
+.periods .selected { background: #25618c; }
+.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 56px; }
+.metric-card { min-height: 195px; padding: 22px 15px 10px; border: 3px solid #079963; background: #c6c1cb; color: #080808; }
+.gauge { font-weight: 700; text-align: center; }
+.gauge-arc { width: 150px; height: 75px; margin: 18px auto 8px; border-radius: 150px 150px 0 0; background: conic-gradient(#611817 0 42%, #14645e 42% 100%); }
+.risk-card > strong { display: block; color: #e51c1c; text-align: center; }
+.metric-card ul { margin: 12px 0 0; padding-left: 7px; color: #fff; font-weight: 700; line-height: 1.55; list-style-position: inside; }
+.metric-title { display: flex; justify-content: space-between; margin-top: 10px; }
+.negative { color: #ed2024; }
+.positive { color: #3fc64d; }
+.decline-line { height: 100px; margin: 10px 18px 2px; border-bottom: 5px solid #000; border-left: 5px solid #000; border-radius: 100% 0 0 0; transform: rotate(8deg); }
+.implied-card ul { color: #111; }
+.implied-card li { display: flex; justify-content: space-between; }
+
+@media (max-width: 1000px) {
+  .sidebar { width: 210px; }
+  .content { padding: 60px 4%; }
+  .chart-row { display: block; }
+  .legend { display: inline-block; margin-top: 12px; }
+  .metrics { grid-template-columns: 1fr; }
+}
+.empty-portfolio-content {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  background: #1e273a;
+}
+
+.create-portfolio-button {
+  border: 0;
+  border-radius: 7px;
+  padding: 12px 22px;
+  background: #079963;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 56px;
+}
+.content {
+  padding: 45px 4% 24px;
+}
+
+h1 {
+  margin-bottom: 30px;
+  font-size: 30px;
+}
+
+.metrics {
+  gap: 28px;
+}
+
+@media (min-width: 1200px) {
+  .metric-card {
+    height: 220px;
+  }
+}
+
+.tabs button {
+  width: 208px;
+  height: 47px;
+  padding: 0;
+}

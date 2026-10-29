@@ -1,0 +1,108 @@
+.performance-chart {
+  width: 100%;
+}
+
+.chart-row {
+  display: flex;
+  align-items: center;
+  gap: 45px;
+}
+
+.chart-panel {
+  position: relative;
+  flex: 1;
+  max-width: 955px;
+  height: 460px;
+  overflow: hidden;
+  border: 4px solid #079963;
+  border-radius: 4px;
+  background: #c6c1cb;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+}
+
+.chart-grid line {
+  stroke: #aaa5af;
+  stroke-width: 1;
+  stroke-dasharray: 5 8;
+}
+
+.risk-free-line,
+.pnl-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.risk-free-line {
+  stroke: #54bd76;
+}
+
+.pnl-line {
+  stroke: #b5ad49;
+}
+
+.legend {
+  padding: 18px 14px;
+  border: 2px solid #258fa2;
+  border-radius: 5px;
+  color: #f7f7f8;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 2;
+}
+
+.legend i {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.green {
+  background: #54bd76;
+}
+
+.yellow {
+  background: #b5ad49;
+}
+
+.periods {
+  margin: 13px 0 10px;
+  text-align: center;
+}
+
+.periods button {
+  margin: 0 2px;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 3px;
+  background: #ddd;
+  color: #222;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.periods button.selected {
+  background: #25618c;
+  color: #111;
+}
+
+@media (max-width: 1000px) {
+  .chart-row {
+    display: block;
+  }
+
+  .legend {
+    display: inline-block;
+    margin-top: 12px;
+  }
+}
