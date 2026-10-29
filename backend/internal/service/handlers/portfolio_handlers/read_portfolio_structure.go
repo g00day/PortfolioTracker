@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// Order: [Ticker, CurrentPrice, Amount, WeightPercentage, PnL(mock)]
+// Order: [Ticker, CurrentPrice, Amount, Cost, WeightPercentage, PnL(currently mock)]
 type StructureRow []interface{}
 
 type PortfolioStructureResponse struct {
@@ -132,6 +132,7 @@ func ReadPortfolioStructure(w http.ResponseWriter, r *http.Request) {
 			tickers[i],
 			prices[i],
 			amount,
+			prices[i] * amount,
 			weight,
 			pnlMock,
 		}
