@@ -1,10 +1,7 @@
 <script setup>
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import logoUrl from '../../assets/logo.svg'
-import downIcon from '../../assets/down.svg'
-import upIcon from '../../assets/up.svg'
 
 const props = defineProps({
   hasPortfolio: {
@@ -22,10 +19,11 @@ const props = defineProps({
   menuItems: {
     type: Array,
     default: () => [
-      { id: 'risk', label: 'Анализ рисков' },
-      { id: 'volatility', label: 'Volatility Drag' },
-      { id: 'pnl', label: 'Анализ P&L' },
+      { id: 'overview', label: 'Обзор' },
       { id: 'structure', label: 'Структура' },
+      { id: 'performance', label: 'Доходность' },
+      { id: 'risks', label: 'Риски&VaR' },
+      { id: 'settings', label: 'Настройки' },
     ],
   },
 })
@@ -33,7 +31,6 @@ const props = defineProps({
 const emit = defineEmits(['createPortfolio', 'navigate'])
 
 const router = useRouter()
-const isPortfolioMenuOpen = ref(false)
 const username = localStorage.getItem('username') || 'admin'
 
 function selectSection(sectionId) {
@@ -58,16 +55,13 @@ function logout() {
       <button
         class="portfolio-selector"
         type="button"
-        :aria-expanded="isPortfolioMenuOpen"
         aria-controls="portfolio-section-menu"
-        @click="isPortfolioMenuOpen = !isPortfolioMenuOpen"
+        @click="selectSection('overview')"
       >
         <span>{{ props.portfolioTitle }}</span>
-        <img :src="isPortfolioMenuOpen ? upIcon : downIcon" alt="">
       </button>
 
-      <Transition name="menu">
-        <div v-if="isPortfolioMenuOpen" id="portfolio-section-menu" class="portfolio-menu">
+      <div id="portfolio-section-menu" class="portfolio-menu">
           <button
             v-for="item in props.menuItems"
             :key="item.id"
@@ -78,8 +72,7 @@ function logout() {
           >
             {{ item.label }}
           </button>
-        </div>
-      </Transition>
+      </div>
     </nav>
 
     <div class="bottom">

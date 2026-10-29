@@ -5,8 +5,9 @@ import RegisterView from '../views/RegisterView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
 import CreatePortfolioView from '../views/CreatePortfolioView.vue'
 import EmptyPortfolioView from '../views/EmptyPortfolioView.vue'
-import PortfolioView from '../views/PortfolioView.vue'
+import OverviewView from '../views/OverviewView.vue'
 import StructureView from '../views/StructureView.vue'
+import InteractiveAnalyticsView from '../views/InteractiveAnalyticsView.vue'
 
 const routes = [
   { path: '/login', component: LoginView },
@@ -15,8 +16,11 @@ const routes = [
   { path: '/create-portfolio', component: CreatePortfolioView, meta: { requiresAuth: true } },
   { path: '/empty', component: EmptyPortfolioView, meta: { requiresAuth: true } },
   { path: '/portfolio/:id/structure', component: StructureView, meta: { requiresAuth: true } },
-  { path: '/portfolio/:id', component: PortfolioView, meta: { requiresAuth: true } },
-  { path: '/', component: PortfolioView },
+  { path: '/portfolio/:id/performance', name: 'performance', component: InteractiveAnalyticsView, meta: { requiresAuth: true } },
+  { path: '/portfolio/:id/risks', name: 'risks', component: InteractiveAnalyticsView, meta: { requiresAuth: true } },
+  { path: '/portfolio/:id/settings', name: 'settings', component: InteractiveAnalyticsView, meta: { requiresAuth: true } },
+  { path: '/portfolio/:id', component: OverviewView, meta: { requiresAuth: true } },
+  { path: '/', component: OverviewView },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 
