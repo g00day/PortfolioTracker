@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"os"
 
+	db "portfolio-tracker/internal/adapter/db"
 	dbu "portfolio-tracker/internal/adapter/db/utils"
 
 	handlers "portfolio-tracker/internal/service/handlers"
+	"portfolio-tracker/internal/service/workers"
 
 	auth_handlers "portfolio-tracker/internal/service/handlers/auth_handlers"
 	p_handlers "portfolio-tracker/internal/service/handlers/portfolio_handlers"
@@ -28,14 +30,35 @@ func main() {
 		fmt.Println("failed to get .env file: %w", err)
 	}
 
+	fmt.Println("--- Trying to get DB connection ---")
+
+	dbConn, err := db.GetDBConnection()
+	if err != nil {
+		log.Fatalf("Failed to get database connection")
+	}
+
+	fmt.Println("--- Successfully got DB connection ---")
+
 	fmt.Println("--- Trying set up DB tables ---")
 
-	_, err = dbu.SetUpTables()
+	_, err = dbu.SetUpTables(dbConn)
 	if err != nil {
 		log.Fatalf("Failed to connect DB: %v", err)
 	}
 
 	fmt.Println("--- All DB tables set up successfully ---")
+
+	fmt.Println("--- Trying to set up background worker(scheduler) ---")
+
+	snapshotWorker := workers.NewSnapshotWorker(dbConn)
+	scheduler, err := snapshotWorker.StartCronJob()
+	if err != nil {
+		log.Printf("Warning: Failed to start automated snapshot scheduler: %v\n", err)
+	} else {
+		defer scheduler.Shutdown()
+	}
+
+	fmt.Println("--- Background worker set up successfully ---")
 
 	// determine a chi router - app core
 	r := chi.NewRouter()

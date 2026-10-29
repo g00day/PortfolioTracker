@@ -1,17 +1,12 @@
 package utils
 
 import (
-	db "portfolio-tracker/internal/adapter/db"
 	r "portfolio-tracker/internal/adapter/db/repos"
+
+	"github.com/jackc/pgx/v5"
 )
 
-func SetUpTables() ([]error, error) {
-
-	dbConn, err := db.GetDBConnection()
-
-	if err != nil {
-		return nil, err
-	}
+func SetUpTables(dbConn *pgx.Conn) ([]error, error) {
 
 	otc := &r.OneTimeCode{DBConn: dbConn}
 	mms := &r.MacroMarketSnapshot{DBConn: dbConn}
