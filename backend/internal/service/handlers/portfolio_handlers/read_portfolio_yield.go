@@ -153,7 +153,7 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 	portfolioCalc := &service.Portfolio{
 		Assets:       serviceAssets,
 		Datafetcher:  *df,
-		RiskFreeRate: baselineRiskFreeRate, // Using dynamic value from DB instead of hardcoded 0.05
+		RiskFreeRate: baselineRiskFreeRate,
 	}
 
 	covMatrix := portfolioCalc.BuildCovariationMatrix()
@@ -175,19 +175,20 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 			tickers[i],
 			assetPrices[i],
 			amount,
+			assetPrices[i] * amount,
 			weight,
 			pnlMock,
 		}
 	}
 
-	// Заглушки p&l массивов
+	// p&l mock-data
 	pnlHistory := map[string][]float64{
 		"risk_free":      {1, 2, 3, 4, 5, 6},
 		"portfolio":      {12, -20, -100, -201, 203},
 		"portfolio_FOMO": {12, -50, -200, 300, 500},
 	}
 
-	// Заглушки топ-3 доходных активов
+	// top 3 yield mocks
 	yieldTop3 := map[string]YieldTopRow{
 		"1": {"BTCUSDT", 102.0, 48.0},
 		"2": {"USD-Tres Oct-2026", 80.0, 12.0},
@@ -200,8 +201,8 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 		PortfolioStructure: structure,
 		SharpesRatio:       sharpe,
 		SortinoRatio:       sortino,
-		CovFomoPnl:         -0.5, // Заглушка ковариации FOMO
-		CorrFomoPnl:        -2.0, // Заглушка корреляции FOMO
+		CovFomoPnl:         -0.5, // cov(FOMO, p&l) mock
+		CorrFomoPnl:        -2.0, // corr(FOMO, p&l) mock
 	}
 
 	w.WriteHeader(http.StatusOK)
