@@ -102,8 +102,9 @@ func main() {
 		r.Post("/{id}/transactions", p_handlers.AddPortfolioTransaction)
 
 		// endpoints for crucial metricks
-		r.Get("/{id}/yield", p_handlers.ReadPortfolioYield)
 		r.Get("/{id}/structure", p_handlers.ReadPortfolioStructure)
+		r.Get("/{id}/overview", p_handlers.ReadPortfolioOverview)
+		r.Get("/{id}/yield", p_handlers.ReadPortfolioYield)
 		r.Get("/{id}/risks", p_handlers.GetPortfolioRiskMetrics)
 	})
 
