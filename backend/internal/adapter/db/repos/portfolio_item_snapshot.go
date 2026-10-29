@@ -79,3 +79,35 @@ func (r *PortfolioItemSnapshot) Read(id int32) (PortfolioItemSnapshotInstance, e
 
 	return data, nil
 }
+
+func (r *PortfolioItemSnapshot) ReadHistoryByPortfolio(portfolioID int32) ([]PortfolioItemSnapshotInstance, error) {
+	query := `SELECT pis.id, pis.portfolio_item_id, pis.amount, pis.date 
+	          FROM portfolio_item_snapshots pis
+	          JOIN portfolio_items pi ON pis.portfolio_item_id = pi.id
+	          WHERE pi.portfolio_id = $1
+	          ORDER BY pis.date ASC;`
+
+	rows, err := r.DBConn.Query(context.Background(), query, portfolioID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query snapshot history: %w", err)
+	}
+	defer rows.Close()
+
+	var snapshots []PortfolioItemSnapshotInstance
+
+	for rows.Next() {
+		var data PortfolioItemSnapshotInstance
+		err := rows.Scan(
+			&data.Id,
+			&data.PortfolioItemId,
+			&data.Amount,
+			&data.Date,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan snapshot row: %w", err)
+		}
+		snapshots = append(snapshots, data)
+	}
+
+	return snapshots, nil
+}

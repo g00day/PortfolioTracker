@@ -28,7 +28,7 @@ func (w *SnapshotWorker) StartCronJob() (gocron.Scheduler, error) {
 
 	// Schedule the job to run every day at 00:00 (midnight)
 	_, err = s.NewJob(
-		gocron.CronJob("* * * * *", false),
+		gocron.CronJob("0 0 * * *", false),
 		gocron.NewTask(w.MakePortfolioSnapshots),
 	)
 	if err != nil {

@@ -14,6 +14,7 @@ type TransactionInstance struct {
 	PortfolioItem int32
 	Type          string  // "deposit" or "withdraw"
 	Amount        float64 // amount in asset
+	PriceUSD      float64 // historical price of asset
 	ProcessedAt   *time.Time
 }
 
@@ -41,6 +42,7 @@ func (t *Transaction) CreateTable() error {
 		portfolio_item_id INT NOT NULL REFERENCES portfolio_items(id) ON DELETE CASCADE,
 		type transaction_type NOT NULL,
 		amount DECIMAL NOT NULL,
+		price_usd DECIMAL NOT NULL,
 		processed_at TIMESTAMP NOT NULL DEFAULT NOW()
 	);`
 
@@ -58,8 +60,9 @@ func (t *Transaction) CreateWithTx(ctx context.Context, tx pgx.Tx, data Transact
 		portfolio_item_id,
 		type,
 		amount,
+		price_usd,
 		processed_at
-	) VALUES ($1, $2, $3, $4, COALESCE($5, NOW()))
+	) VALUES ($1, $2, $3, $4, $5, COALESCE($6, NOW()))
 	RETURNING id;`
 
 	var id int32
@@ -68,6 +71,7 @@ func (t *Transaction) CreateWithTx(ctx context.Context, tx pgx.Tx, data Transact
 		data.PortfolioItem,
 		data.Type,
 		data.Amount,
+		data.PriceUSD,
 		data.ProcessedAt,
 	).Scan(&id)
 
@@ -83,8 +87,9 @@ func (t *Transaction) Create(data TransactionInstance) (int32, error) {
 		portfolio_item_id,
 		type,
 		amount,
+		price_usd,
 		processed_at
-	) VALUES ($1, $2, $3, $4, COALESCE($5, NOW()))
+	) VALUES ($1, $2, $3, $4, $5, COALESCE($6, NOW()))
 	RETURNING id;`
 
 	var id int32
@@ -94,6 +99,7 @@ func (t *Transaction) Create(data TransactionInstance) (int32, error) {
 		data.PortfolioItem,
 		data.Type,
 		data.Amount,
+		data.PriceUSD,
 		data.ProcessedAt,
 	).Scan(&id)
 
@@ -105,7 +111,7 @@ func (t *Transaction) Create(data TransactionInstance) (int32, error) {
 }
 
 func (t *Transaction) Read(id int32) (TransactionInstance, error) {
-	query := `SELECT id, portfolio_id, portfolio_item_id, type, amount, processed_at 
+	query := `SELECT id, portfolio_id, portfolio_item_id, type, amount, price_usd, processed_at 
 	          FROM transactions WHERE id = $1;`
 
 	var data TransactionInstance
@@ -116,6 +122,7 @@ func (t *Transaction) Read(id int32) (TransactionInstance, error) {
 		&data.PortfolioItem,
 		&data.Type,
 		&data.Amount,
+		&data.PriceUSD,
 		&data.ProcessedAt,
 	)
 
@@ -130,7 +137,7 @@ func (t *Transaction) Read(id int32) (TransactionInstance, error) {
 }
 
 func (t *Transaction) ReadAllByPortfolio(portfolioID int32) ([]TransactionInstance, error) {
-	query := `SELECT id, portfolio_id, portfolio_item_id, type, amount, processed_at 
+	query := `SELECT id, portfolio_id, portfolio_item_id, type, amount, price_usd, processed_at 
 	          FROM transactions 
 	          WHERE portfolio_id = $1
 	          ORDER BY processed_at DESC;`
@@ -151,6 +158,7 @@ func (t *Transaction) ReadAllByPortfolio(portfolioID int32) ([]TransactionInstan
 			&data.PortfolioItem,
 			&data.Type,
 			&data.Amount,
+			&data.PriceUSD,
 			&data.ProcessedAt,
 		)
 		if err != nil {
@@ -161,6 +169,40 @@ func (t *Transaction) ReadAllByPortfolio(portfolioID int32) ([]TransactionInstan
 
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating transactions: %w", err)
+	}
+
+	return transactions, nil
+}
+
+func (t *Transaction) ReadAllByItem(portfolioItemID int32) ([]TransactionInstance, error) {
+	query := `SELECT id, portfolio_id, portfolio_item_id, type, amount, price_usd, processed_at 
+	          FROM transactions 
+	          WHERE portfolio_item_id = $1
+	          ORDER BY processed_at ASC;`
+
+	rows, err := t.DBConn.Query(context.Background(), query, portfolioItemID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query transactions for item: %w", err)
+	}
+	defer rows.Close()
+
+	var transactions []TransactionInstance
+
+	for rows.Next() {
+		var data TransactionInstance
+		err := rows.Scan(
+			&data.Id,
+			&data.PortfolioId,
+			&data.PortfolioItem,
+			&data.Type,
+			&data.Amount,
+			&data.PriceUSD,
+			&data.ProcessedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan transaction row: %w", err)
+		}
+		transactions = append(transactions, data)
 	}
 
 	return transactions, nil
