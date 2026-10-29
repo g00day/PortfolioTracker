@@ -145,7 +145,7 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 
 		isItemRiskFreeMap[item.Id] = isRF
 
-		// Расчет реального P&L для актива на основе средневзвешенной цены входа из транзакций
+		// calculate historical pnl
 		txs, txErr := tRepo.ReadAllByItem(item.Id)
 		var pnlUSD, pnlPercentage float64
 		if txErr == nil && len(txs) > 0 {
@@ -153,7 +153,7 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 			for _, tx := range txs {
 				mockTxAssets = append(mockTxAssets, service.Asset{
 					Amount:         tx.Amount,
-					RiskFreeReward: tx.PriceUSD, // Используем RiskFreeReward как историческую цену покупки
+					RiskFreeReward: tx.PriceUSD, // use RiskFreeReward as historical deposit price
 				})
 			}
 			pnlUSD, pnlPercentage = service.CalculateItemPnL(mockTxAssets, price, float64(item.TotalAmount))
@@ -204,7 +204,7 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 			weight = ((amount * assetPrices[i]) / totalPortfolioValue) * 100.0
 		}
 
-		// Находим посчитанный P&L для текущего тикера, чтобы подставить в структуру портфеля
+		// calculate asset pnl to pass into into whe whole portfolio
 		var currentAssetPnL float64
 		for _, cy := range calculatedYields {
 			if cy.Ticker == tickers[i] {
@@ -223,7 +223,7 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Динамическая сортировка активов по абсолютному P&L (USD) от большего к меньшему для Топ-3
+	// Dynamic P&L sort(USD)
 	sort.Slice(calculatedYields, func(i, j int) bool {
 		return calculatedYields[i].PnLUSD > calculatedYields[j].PnLUSD
 	})
@@ -237,7 +237,7 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 		yieldTop3[rankKey] = YieldTopRow{cy.Ticker, cy.PnLUSD, cy.PnLPercentage}
 	}
 
-	// --- Динамический расчет исторических временных рядов P&L и FOMO ---
+	// --- dynamic time series calculations P&L и FOMO ---
 	snapshots, err := snapshotRepo.ReadHistoryByPortfolio(int32(portfolioID))
 
 	var riskFreeSeries []float64
@@ -276,7 +276,7 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 			initialRF := dailyValues[dates[0]].RFValue
 			initialMarket := dailyValues[dates[0]].MarketValue
 
-			// Для симуляции FOMO берем историческую динамику главного актива рынка (например, BTCUSDT)
+			// Taking BTCUSDT for calculating FOMO
 			btcKlines := portfolioCalc.Datafetcher.GetKlines("BTCUSDT", "D", "spot")
 
 			for t, date := range dates {
@@ -288,7 +288,7 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 				riskFreeSeries = append(riskFreeSeries, rfPnL)
 				portfolioSeries = append(portfolioSeries, marketPnL)
 
-				// Моделирование FOMO P&L с использованием корректных индексов цен закрытия [4]
+				// Calculating FOMO P&L by close prices [4]
 				fomoPnL := marketPnL * 1.35
 				if len(btcKlines) > t && t > 0 {
 					initialBTCPrice := btcKlines[0][4]
@@ -315,12 +315,6 @@ func ReadPortfolioYield(w http.ResponseWriter, r *http.Request) {
 		covFomo = service.CalculateCovariation(portfolioSeries, fomoSeries)
 		corrFomo = service.CalculatePirsonCorrelation(portfolioSeries, fomoSeries)
 
-		// Жесткий bound-safeguard для корреляции на уровне контроллера
-		if corrFomo > 1.0 {
-			corrFomo = 1.0
-		} else if corrFomo < -1.0 {
-			corrFomo = -1.0
-		}
 	}
 
 	// p&l mock-data
