@@ -67,7 +67,24 @@ func main() {
 
 	fmt.Println("--- Background worker set up successfully ---")
 
-	// determine a chi router - app core
+	r := newRouter()
+
+	port := os.Getenv("APP_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	fmt.Printf("--- starting server on :%s ---", port)
+	if err := http.ListenAndServe(":"+port, r); err != nil {
+		log.Fatalf("server stopped: %v", err)
+	}
+
+}
+
+// newRouter keeps HTTP route construction separate from process startup so the
+// complete API surface can be exercised by unit tests without a database or a
+// listening TCP socket.
+func newRouter() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -122,14 +139,5 @@ func main() {
 		r.Delete("/{id}", pi_handlers.DeletePortfolioItem)
 	})
 
-	port := os.Getenv("APP_PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	fmt.Printf("--- starting server on :%s ---", port)
-	if err := http.ListenAndServe(":"+port, r); err != nil {
-		log.Fatalf("server stopped: %v", err)
-	}
-
+	return r
 }

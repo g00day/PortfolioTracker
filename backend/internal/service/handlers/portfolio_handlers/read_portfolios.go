@@ -6,8 +6,6 @@ import (
 	"portfolio-tracker/internal/adapter/db/repos"
 	"portfolio-tracker/internal/service/middlewares"
 	"time"
-
-	database "portfolio-tracker/internal/adapter/db"
 )
 
 type PortfolioResponse struct {
@@ -28,7 +26,7 @@ func ReadPortfolios(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbConn, err := database.GetDBConnection()
+	dbConn, err := getDBConnection()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to get DB connection"})

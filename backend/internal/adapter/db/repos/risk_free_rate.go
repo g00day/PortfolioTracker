@@ -14,7 +14,7 @@ type RiskFreeRateInstance struct {
 }
 
 type RiskFreeRate struct {
-	DBConn *pgx.Conn
+	DBConn DBConnection
 }
 
 func (rfr *RiskFreeRate) CreateTable() error {

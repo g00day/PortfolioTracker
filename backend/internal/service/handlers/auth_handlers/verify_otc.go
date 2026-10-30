@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	database "portfolio-tracker/internal/adapter/db"
 	"portfolio-tracker/internal/adapter/db/repos"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -55,7 +54,7 @@ func VerifyOneTimeCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbConn, err := database.GetDBConnection()
+	dbConn, err := getDBConnection()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to get database connection"})

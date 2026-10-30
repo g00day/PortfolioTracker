@@ -20,7 +20,7 @@ type OneTimeCodeInstance struct {
 }
 
 type OneTimeCode struct {
-	DBConn *pgx.Conn
+	DBConn DBConnection
 }
 
 // code hashing helper

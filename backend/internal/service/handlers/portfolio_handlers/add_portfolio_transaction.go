@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	database "portfolio-tracker/internal/adapter/db"
-
 	"github.com/go-chi/chi/v5"
 )
 
@@ -78,7 +76,7 @@ func AddPortfolioTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbConn, err := database.GetDBConnection()
+	dbConn, err := getDBConnection()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to get DB connection"})

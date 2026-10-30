@@ -17,7 +17,7 @@ type UserInstance struct {
 }
 
 type User struct {
-	DBConn *pgx.Conn
+	DBConn DBConnection
 }
 
 func (u *User) CreateTable() error {

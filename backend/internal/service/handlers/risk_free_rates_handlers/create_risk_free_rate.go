@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"portfolio-tracker/internal/adapter/db/repos"
-
-	database "portfolio-tracker/internal/adapter/db"
 )
 
 type CreateRiskFreeRateRequest struct {
@@ -35,7 +33,7 @@ func CreateRiskFreeRateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbConn, err := database.GetDBConnection()
+	dbConn, err := getDBConnection()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to get DB connection"})

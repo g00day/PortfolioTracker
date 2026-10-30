@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	database "portfolio-tracker/internal/adapter/db"
 	"portfolio-tracker/internal/adapter/db/repos"
 
 	"golang.org/x/crypto/bcrypt"
@@ -52,7 +51,7 @@ func RegistrationHandler(w http.ResponseWriter, r *http.Request) {
 		Email:        req.Email,
 	}
 
-	dbConn, err := database.GetDBConnection()
+	dbConn, err := getDBConnection()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(RegisterResponse{Status: "error", Message: "Failed to get database connection"})

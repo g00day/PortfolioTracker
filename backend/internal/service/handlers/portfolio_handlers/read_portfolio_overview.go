@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"time"
 
-	database "portfolio-tracker/internal/adapter/db"
-
 	"github.com/go-chi/chi/v5"
 )
 
@@ -58,7 +56,7 @@ func ReadPortfolioOverview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbConn, err := database.GetDBConnection()
+	dbConn, err := getDBConnection()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to get DB connection"})
@@ -143,15 +141,21 @@ func ReadPortfolioOverview(w http.ResponseWriter, r *http.Request) {
 		if isRF && txErr == nil {
 			rateValue := 0.0
 			if item.RiskFreeRateId != nil {
-				if rate, rateErr := rfrRepo.Read(*item.RiskFreeRateId); rateErr == nil { rateValue = rate.Value }
+				if rate, rateErr := rfrRepo.Read(*item.RiskFreeRateId); rateErr == nil {
+					rateValue = rate.Value
+				}
 			}
 			accrued := calculateRiskFreePnL(txs, rateValue, time.Now())
-			if item.TotalAmount > 0 { price = (float64(item.TotalAmount) + accrued) / float64(item.TotalAmount) }
+			if item.TotalAmount > 0 {
+				price = (float64(item.TotalAmount) + accrued) / float64(item.TotalAmount)
+			}
 		}
 		assetPrices[i] = price
 		currentVal := float64(item.TotalAmount) * price
 		totalPortfolioValue += currentVal
-		if isRF { riskFreePrincipal += float64(item.TotalAmount) }
+		if isRF {
+			riskFreePrincipal += float64(item.TotalAmount)
+		}
 		if txErr == nil && len(txs) > 0 {
 			var mockTxAssets []service.Asset
 			for _, tx := range txs {

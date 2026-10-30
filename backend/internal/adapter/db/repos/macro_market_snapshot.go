@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type MacroMarketSnapshotInstance struct {
@@ -18,7 +16,7 @@ type MacroMarketSnapshotInstance struct {
 }
 
 type MacroMarketSnapshot struct {
-	DBConn *pgx.Conn
+	DBConn DBConnection
 }
 
 func (mms *MacroMarketSnapshot) CreateTable() error {

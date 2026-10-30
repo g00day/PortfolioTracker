@@ -16,7 +16,7 @@ type PortfolioItemSnapshotInstance struct {
 }
 
 type PortfolioItemSnapshot struct {
-	DBConn *pgx.Conn
+	DBConn DBConnection
 }
 
 func (r *PortfolioItemSnapshot) CreateTable() error {

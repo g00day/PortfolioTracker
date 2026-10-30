@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
-	database "portfolio-tracker/internal/adapter/db"
 	"portfolio-tracker/internal/adapter/db/repos"
 	"time"
 
@@ -40,7 +39,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbConn, err := database.GetDBConnection()
+	dbConn, err := getDBConnection()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(LoginResponse{Status: "error", Error: "Database connection unavailable"})

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"portfolio-tracker/internal/adapter/db/repos"
-
-	database "portfolio-tracker/internal/adapter/db"
 )
 
 type RiskFreeRateResponse struct {
@@ -17,7 +15,7 @@ type RiskFreeRateResponse struct {
 func ReadRiskFreeRates(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	dbConn, err := database.GetDBConnection()
+	dbConn, err := getDBConnection()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to get DB connection"})

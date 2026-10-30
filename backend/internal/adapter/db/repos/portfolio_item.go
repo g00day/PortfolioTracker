@@ -16,7 +16,7 @@ type PortfolioItemInstance struct {
 }
 
 type PortfolioItem struct {
-	DBConn *pgx.Conn
+	DBConn DBConnection
 }
 
 func (pi *PortfolioItem) CreateTable() error {

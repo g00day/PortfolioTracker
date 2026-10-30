@@ -19,7 +19,7 @@ type TransactionInstance struct {
 }
 
 type Transaction struct {
-	DBConn *pgx.Conn
+	DBConn DBConnection
 }
 
 func (t *Transaction) CreateTable() error {

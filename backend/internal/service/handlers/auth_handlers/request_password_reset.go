@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
-	database "portfolio-tracker/internal/adapter/db"
 	"portfolio-tracker/internal/adapter/db/repos"
-	smtp "portfolio-tracker/internal/service/smtp"
 )
 
 type RequestPasswordResetRequest struct {
@@ -48,7 +46,7 @@ func RequestPasswordResetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbConn, err := database.GetDBConnection()
+	dbConn, err := getDBConnection()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to get database connection"})
@@ -88,7 +86,7 @@ func RequestPasswordResetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = smtp.SendPasswordResetEmail(req.Email, code)
+	err = sendPasswordResetEmail(req.Email, code)
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(APIResponse{Status: "error", Message: "Failed to send password reset email"})
