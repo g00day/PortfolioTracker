@@ -219,28 +219,30 @@ func (p *Portfolio) CalculateMarginalAndComponentContributions(covariationMatrix
 		return []float64{}, []float64{}
 	}
 
-	generalVolatility := p.CalculateGeneralVolatility(covariationMatrix) // general portfolio volatility
+	generalVolatility := p.CalculateGeneralVolatility(covariationMatrix) // daily portfolio volatility
 
 	// if the volatility is equals to zero return empty slices
 	if generalVolatility == 0 {
 		return []float64{}, []float64{}
 	}
 
+	annualVolatility := generalVolatility * SQRT_365
+
 	mcr := make([]float64, n)
 	cctr := make([]float64, n)
 
-	// 3. Calculate MCR and CCR througout one loop
+	// Calculate MCR (annualized) and CCTR (percentage share of total risk)
 	for i := 0; i < n; i++ {
 		sigmaW_i := 0.0
 		for j := 0; j < n; j++ {
 			sigmaW_i += covariationMatrix[i][j] * assets[j].W
 		}
 
-		// MCR
+		// Annualized Marginal Contribution to Risk
 		mcr[i] = (sigmaW_i / generalVolatility) * SQRT_365
 
-		// CCTR = w_i * MCR_i
-		cctr[i] = (assets[i].W * mcr[i])
+		// Component Contribution to Total Risk (sum across all assets = 1.0 / 100%)
+		cctr[i] = (assets[i].W * mcr[i]) / annualVolatility
 	}
 
 	return mcr, cctr
