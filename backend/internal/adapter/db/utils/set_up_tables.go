@@ -9,7 +9,6 @@ import (
 func SetUpTables(dbConn *pgx.Conn) ([]error, error) {
 
 	otc := &r.OneTimeCode{DBConn: dbConn}
-	mms := &r.MacroMarketSnapshot{DBConn: dbConn}
 	u := &r.User{DBConn: dbConn}
 	rfr := &r.RiskFreeRate{DBConn: dbConn}
 	p := &r.Portfolio{DBConn: dbConn}
@@ -22,7 +21,6 @@ func SetUpTables(dbConn *pgx.Conn) ([]error, error) {
 	// layer - 1. independent tables
 	errSlice = append(errSlice, u.CreateTable())
 	errSlice = append(errSlice, rfr.CreateTable())
-	errSlice = append(errSlice, mms.CreateTable())
 
 	// layer-2. rely on layer-1
 	errSlice = append(errSlice, otc.CreateTable())
