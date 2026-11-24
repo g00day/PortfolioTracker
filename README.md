@@ -89,10 +89,11 @@ A brief overview of the financial models implemented in the engine:
 ## Roadmap
 
 - [ ] Redesign the frontend from scratch to improve usability, responsiveness, and fix existing layout bugs
+- [ ] Translate UI components from Russian to English.
 - [ ] Support for additional CEX APIs (Binance, OKX)
 - [ ] Read-only exchange balance sync via API keys
-- [ ] On-chain wallet tracking (EVM / Solana)
 - [ ] Export portfolio & risk analytics to CSV / PDF
+- [ ] Monte-Karlo portfolio simulations based on correlation
 
 
 
