@@ -44,48 +44,72 @@ func (w *SnapshotWorker) MakePortfolioSnapshots() {
 	log.Println("[CRON WORKER] --- Starting daily portfolio snapshots process ---")
 
 	cs := exchanges_datafetcher.NewConnectionSettings()
-	df := exchanges_datafetcher.NewCrossMarketDataFetcher(&cs, 1000)
+	df := exchanges_datafetcher.NewCrossMarketDataFetcher(&cs, 1) // create a datafetcher with only one - actual kline
 
-	// Instantiating repository abstraction handles
 	piRepo := repos.PortfolioItem{DBConn: w.DBConn}
 	snapshotRepo := repos.PortfolioItemSnapshot{DBConn: w.DBConn}
 
 	items, err := piRepo.ReadAll()
 	if err != nil {
-		log.Printf("[CRON WORKER ERROR] Failed to fetch portfolio items from repository: %v\n", err)
+		log.Printf("[CRON WORKER ERROR] Failed to fetch portfolio items: %v\n", err)
 		return
 	}
 
-	for _, item := range items {
-		var currentAssetPrice float64
+	priceCache := make(map[string]float64) // using cache to avoid duplicating requests to exchanges for the same ticker
 
-		// Asset price calculation logic (similar to your analytics handlers)
-		if item.Ticker != nil {
-			klines := df.GetKlines(*item.Ticker, "D", "spot")
-			if len(klines) > 0 {
-				currentAssetPrice = klines[0][4]
-			}
-		} else {
-			currentAssetPrice = 1.0 // Fixed risk-free rate price pegged to $1
+	snapshotTime := time.Now().UTC() // unified time for all tickers in that run
+	savedCount := 0
+
+	for _, item := range items {
+		price, err := w.resolveAssetPrice(df, item.Ticker, priceCache)
+		if err != nil {
+			log.Printf("[CRON WORKER WARN] Skipping item ID %d: %v\n", item.Id, err)
+			continue
 		}
 
-		// Calculate the final USD valuation of the position
-		totalUSDValue := float64(item.TotalAmount) * currentAssetPrice
-		now := time.Now()
+		totalUSDValue := float64(item.TotalAmount) * price
 
 		snapshotInput := repos.PortfolioItemSnapshotInstance{
 			PortfolioItemId: item.Id,
 			Amount:          totalUSDValue,
-			Date:            &now,
+			Date:            &snapshotTime,
 		}
 
-		// Persist the snapshot into the database via the repository layer
-		_, err = snapshotRepo.Create(snapshotInput)
-		if err != nil {
-			log.Printf("[CRON WORKER ERROR] Failed to save snapshot via repository for item ID %d: %v\n", item.Id, err)
+		if _, err := snapshotRepo.Create(snapshotInput); err != nil {
+			log.Printf("[CRON WORKER ERROR] Failed to save snapshot for item ID %d: %v\n", item.Id, err)
 			continue
 		}
+
+		savedCount++
 	}
 
-	log.Println("[CRON WORKER] --- Daily portfolio snapshots process finished successfully ---")
+	log.Printf("[CRON WORKER] --- Finished: saved %d/%d snapshots ---\n", savedCount, len(items))
+}
+
+func (w *SnapshotWorker) resolveAssetPrice(
+	df *exchanges_datafetcher.CrossMarketDataFetcher,
+	ticker *string,
+	cache map[string]float64,
+) (float64, error) {
+	if ticker == nil || *ticker == "" {
+		return 1.0, nil // risk-free rate
+	}
+
+	symbol := *ticker
+	if cachedPrice, ok := cache[symbol]; ok {
+		return cachedPrice, nil
+	}
+
+	klines := df.GetKlines(symbol, "D", "spot")
+	if len(klines) == 0 || len(klines[0]) < 5 {
+		return 0, fmt.Errorf("no kline data returned for ticker %s", symbol)
+	}
+
+	closePrice := klines[0][4]
+	if closePrice <= 0 {
+		return 0, fmt.Errorf("invalid non-positive price (%f) for ticker %s", closePrice, symbol)
+	}
+
+	cache[symbol] = closePrice
+	return closePrice, nil
 }
