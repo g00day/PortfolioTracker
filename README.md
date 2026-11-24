@@ -4,10 +4,6 @@ Portfolio tracker for cryptocurrencies that implements risk, returns and diversi
 
 ![risk metrics](assets/image.png)
 
-```bash
-docker compose up --build
-```
-
 ## Main features
 
 * **Real-time monitoring:** live pricing for crypto assets via Bybit API
