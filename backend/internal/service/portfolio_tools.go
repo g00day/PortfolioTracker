@@ -210,25 +210,26 @@ func (p *Portfolio) CalculateDiversificationRate(covariationMatrix [][]float64) 
 	return weightedVolatilitySumm / generalVolatility
 }
 
-func (p *Portfolio) CalculateMarginalAndComponentContributions(covariationMatrix [][]float64) ([]float64, []float64) {
+func (p *Portfolio) CalculateMarginalAndComponentContributions(covariationMatrix [][]float64) ([]float64, []float64, []float64) {
 	assets := p.Assets
 	n := len(assets)
 
 	// if the portfolio is empty return an empty slice
 	if n == 0 {
-		return []float64{}, []float64{}
+		return []float64{}, []float64{}, []float64{}
 	}
 
 	generalVolatility := p.CalculateGeneralVolatility(covariationMatrix) // daily portfolio volatility
 
 	// if the volatility is equals to zero return empty slices
 	if generalVolatility == 0 {
-		return []float64{}, []float64{}
+		return []float64{}, []float64{}, []float64{}
 	}
 
 	annualVolatility := generalVolatility * SQRT_365
 
 	mcr := make([]float64, n)
+	ccr := make([]float64, n)
 	cctr := make([]float64, n)
 
 	// Calculate MCR (annualized) and CCTR (percentage share of total risk)
@@ -242,10 +243,11 @@ func (p *Portfolio) CalculateMarginalAndComponentContributions(covariationMatrix
 		mcr[i] = (sigmaW_i / generalVolatility) * SQRT_365
 
 		// Component Contribution to Total Risk (sum across all assets = 1.0 / 100%)
-		cctr[i] = (assets[i].W * mcr[i]) / annualVolatility
+		ccr[i] = assets[i].W * mcr[i]
+		cctr[i] = ccr[i] / annualVolatility
 	}
 
-	return mcr, cctr
+	return mcr, ccr, cctr
 }
 
 func (p *Portfolio) CalculateEffectiveNA() float64 {
