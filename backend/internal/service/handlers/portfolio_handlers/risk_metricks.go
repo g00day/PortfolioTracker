@@ -24,7 +24,7 @@ type VaRQuantiles struct {
 
 const SQRT_365 = 19.1049731745428
 
-// Order: [Ticker, [Mu, MuUSD], [Q90, Q90USD], [Q95, Q95USD], [Q99, Q99USD], mcr_i, ccrt_i]
+// Order: [Ticker, [Mu, MuUSD], [Q90, Q90USD], [Q95, Q95USD], [Q99, Q99USD], mcr_i, ccr_i, ccrt_i]
 type PartialRiskRow []interface{}
 
 type PortfolioRiskMetricsResponse struct {
@@ -155,7 +155,7 @@ func GetPortfolioRiskMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	covMatrix := portfolioCalc.BuildCovariationMatrix()
-	mcr, cctr := portfolioCalc.CalculateMarginalAndComponentContributions(covMatrix)
+	mcr, ccr, cctr := portfolioCalc.CalculateMarginalAndComponentContributions(covMatrix)
 	divRatio := portfolioCalc.CalculateDiversificationRate(covMatrix)
 	effNA := portfolioCalc.CalculateEffectiveNA()
 
@@ -177,10 +177,11 @@ func GetPortfolioRiskMetrics(w http.ResponseWriter, r *http.Request) {
 
 		var mu, q90, q95, q99 float64
 		var muUSD, q90USD, q95USD, q99USD float64
-		var mcrVal, cctrVal float64
+		var mcrVal, ccrVal, cctrVal float64
 
 		if i < len(mcr) {
 			mcrVal = mcr[i]
+			ccrVal = ccr[i]
 			cctrVal = cctr[i]
 		}
 
@@ -227,6 +228,7 @@ func GetPortfolioRiskMetrics(w http.ResponseWriter, r *http.Request) {
 			[]float64{q95 * 100.0, q95USD},
 			[]float64{q99 * 100.0, q99USD},
 			mcrVal * 100,  // in percents - 0.1 -> 10%
+			ccrVal * 100,  // in percents - 0.1 -> 10%
 			cctrVal * 100, // in percents - 0.1 -> 10%
 		}
 	}
